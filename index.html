@@ -3,14 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Songsketch – Music Theory & Songwriting Sketchpad (Hooktheory Clone)</title>
-  <meta name="description" content="A comprehensive songwriting and music theory sketchpad inspired by Hooktheory: Roman numeral chord analysis, relative scale-degree piano roll, TheoryTab song database, Trends explorer, and interactive theory lessons.">
+  <title>Songsketch – Music Theory & Songwriting Studio (Hooktheory Clone)</title>
+  <meta name="description" content="A comprehensive songwriting and music theory sketchpad inspired by Hooktheory: Roman numeral chord analysis, relative scale-degree piano roll, Magic Palette suggestions, TheoryTab song database, Chord Crush ear training, Trends explorer, and interactive theory lessons.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎹</text></svg>">
   
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/hookpad.css">
   <link rel="stylesheet" href="styles/theorytab.css">
   <link rel="stylesheet" href="styles/trends-guide.css">
+  <link rel="stylesheet" href="styles/chordcrush.css">
+  <link rel="stylesheet" href="styles/leadsheet.css">
 </head>
 <body>
   <!-- Header Navigation -->
@@ -31,6 +33,11 @@
         <li>
           <button class="nav-tab-btn" data-tab="theorytab">
             <span>🔍</span> TheoryTab Songs
+          </button>
+        </li>
+        <li>
+          <button class="nav-tab-btn" data-tab="chordcrush">
+            <span>🎮</span> Chord Crush
           </button>
         </li>
         <li>
@@ -146,6 +153,7 @@
               <option value="Pachelbel Canon Sequence">Pachelbel Sequence</option>
             </select>
 
+            <button class="btn" id="leadsheet-btn" title="View Lead Sheet & Guitar Tabs">🎼 Notation / Tabs</button>
             <button class="btn btn-success" id="midi-export-btn" title="Export Multi-Track MIDI">🎹 MIDI</button>
             <button class="btn" id="wav-export-btn" title="Render Studio WAV Audio">🔊 WAV</button>
           </div>
@@ -175,10 +183,10 @@
 
         <!-- Bottom Controls: Palette & AI Suggestions -->
         <div class="bottom-controls-grid">
-          <!-- Chord Palette -->
+          <!-- Chord Palette (Magic Palette) -->
           <div class="chord-palette-card">
             <div class="palette-header">
-              <h3 style="font-size: 1rem; font-weight: 700;">Harmonic Chord Palette</h3>
+              <h3 style="font-size: 1rem; font-weight: 700;">✨ Magic Chord Palette</h3>
               <div class="palette-tabs">
                 <button class="palette-tab-btn active" data-category="diatonic">Diatonic</button>
                 <button class="palette-tab-btn" data-category="seventh">7th Chords</button>
@@ -208,9 +216,9 @@
             </div>
           </div>
 
-          <!-- Smart Next Chord Suggestions (Hooktheory Trends AI) -->
+          <!-- Smart Next Chord Suggestions (Hooktheory Magic Suggestions) -->
           <div class="suggestions-card">
-            <h3 style="font-size: 1rem; font-weight: 700;">Smart Next Chord (Trends AI)</h3>
+            <h3 style="font-size: 1rem; font-weight: 700;">🔮 Next Chord Suggestions (Database AI)</h3>
             <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
               Statistically probable chords that usually follow in popular hit music.
             </p>
@@ -234,11 +242,34 @@
     <section class="tab-pane" id="tab-theorytab">
       <div class="theorytab-hero">
         <h2>TheoryTab Song Library</h2>
-        <p>Explore famous songs analyzed using Roman numerals and relative scale degrees. Listen to their harmony or load them into Hookpad to edit, reharmonize, and transpose!</p>
+        <p>Explore famous songs analyzed using Roman numerals and relative scale degrees. Search by artist, or build out a chord progression to find songs using the same chords!</p>
         
         <div class="search-bar-row">
           <div class="search-input-wrap">
             <input type="text" id="theorytab-search" placeholder="Search by song title, artist, or chords (e.g. 'Beatles', 'I V vi IV')...">
+          </div>
+        </div>
+
+        <!-- Interactive Chord Progression Builder Filter -->
+        <div class="prog-builder-section">
+          <div class="prog-builder-title">
+            <span>Build a Chord Progression to Filter Songs:</span>
+            <button class="clear-prog-btn" id="clear-prog-filter-btn">Reset Filter</button>
+          </div>
+          <div class="prog-builder-buttons">
+            <button class="prog-builder-btn" data-num="I">I</button>
+            <button class="prog-builder-btn" data-num="ii">ii</button>
+            <button class="prog-builder-btn" data-num="iii">iii</button>
+            <button class="prog-builder-btn" data-num="IV">IV</button>
+            <button class="prog-builder-btn" data-num="V">V</button>
+            <button class="prog-builder-btn" data-num="vi">vi</button>
+            <button class="prog-builder-btn" data-num="vii°">vii°</button>
+            <button class="prog-builder-btn" data-num="i">i</button>
+            <button class="prog-builder-btn" data-num="bVI">bVI</button>
+            <button class="prog-builder-btn" data-num="bVII">bVII</button>
+          </div>
+          <div class="active-filter-sequence" id="active-filter-sequence">
+            <span style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">Active progression filter: None</span>
           </div>
         </div>
 
@@ -256,7 +287,63 @@
       <div class="songs-grid" id="theorytab-songs-grid"></div>
     </section>
 
-    <!-- ================= TAB 3: TRENDS ================= -->
+    <!-- ================= TAB 3: CHORD CRUSH (EAR TRAINING) ================= -->
+    <section class="tab-pane" id="tab-chordcrush">
+      <div class="chordcrush-container">
+        
+        <div class="chordcrush-header-card">
+          <div>
+            <h2 style="font-size: 1.7rem; font-weight: 800; margin-bottom: 4px;">Chord Crush 🎧</h2>
+            <p style="opacity: 0.9; font-size: 0.95rem;">Train your ear to recognize chords and progressions using examples from real songs!</p>
+          </div>
+
+          <div class="chordcrush-stats">
+            <div class="stat-box">
+              <div class="stat-label">Level</div>
+              <div class="stat-value" id="crush-level-display">1</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Streak</div>
+              <div class="stat-value" id="crush-streak-display">0 🔥</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Score</div>
+              <div class="stat-value" id="crush-score-display">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chordcrush-board-card">
+          <span class="level-badge" id="crush-level-desc">Level 1: The Two Giants (I & V)</span>
+
+          <p style="color: var(--text-muted); font-size: 0.95rem; text-align: center;">
+            Listen closely to the audio. Identify the chords in the progression and press Submit!
+          </p>
+
+          <button class="btn btn-primary audio-prompt-btn" id="btn-crush-listen">
+            🔊 Play Audio Progression
+          </button>
+
+          <!-- Guess Slots -->
+          <div class="guess-slots-row" id="crush-guess-slots"></div>
+
+          <!-- Chord Choice Buttons -->
+          <div class="chordcrush-choices-grid" id="crush-choices-grid"></div>
+
+          <div style="display: flex; gap: 10px;">
+            <button class="btn" id="btn-crush-clear">Clear Guess</button>
+            <button class="btn btn-success" id="btn-crush-submit" style="min-width: 130px;">Check Answer</button>
+            <button class="btn btn-primary" id="btn-crush-next" style="display: none;">Next Round ➔</button>
+          </div>
+
+          <!-- Feedback Banner -->
+          <div class="feedback-banner" id="crush-feedback-banner"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= TAB 4: TRENDS ================= -->
     <section class="tab-pane" id="tab-trends">
       <div class="trends-container">
         <div class="trends-header-card">
@@ -293,7 +380,7 @@
       </div>
     </section>
 
-    <!-- ================= TAB 4: THEORY ACADEMY ================= -->
+    <!-- ================= TAB 5: THEORY ACADEMY ================= -->
     <section class="tab-pane" id="tab-academy">
       <div class="academy-container">
         <aside class="academy-sidebar">
@@ -307,7 +394,7 @@
       </div>
     </section>
 
-    <!-- ================= TAB 5: CHEAT SHEET ================= -->
+    <!-- ================= TAB 6: CHEAT SHEET ================= -->
     <section class="tab-pane" id="tab-cheatsheet">
       <div class="cheat-sheet-card">
         <h2 style="font-size: 1.4rem; margin-bottom: 6px;">Roman Numeral Diatonic Cheat Sheet</h2>
@@ -333,6 +420,20 @@
     </section>
 
   </main>
+
+  <!-- Lead Sheet & Guitar Tabs Modal -->
+  <div class="modal-overlay" id="leadsheet-modal">
+    <div class="modal-card leadsheet-modal-card">
+      <div class="modal-header">
+        <div class="sheet-tab-buttons">
+          <button class="btn btn-primary" id="btn-show-sheet-music">🎼 Sheet Music (Lead Sheet)</button>
+          <button class="btn" id="btn-show-guitar-tabs">🎸 Guitar Tabs & Chords</button>
+        </div>
+        <button class="modal-close" id="leadsheet-modal-close-btn">&times;</button>
+      </div>
+      <div id="leadsheet-content-container"></div>
+    </div>
+  </div>
 
   <!-- Shortcuts Modal -->
   <div class="modal-overlay" id="shortcuts-modal">

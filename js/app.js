@@ -5,10 +5,14 @@ import { AudioEngine } from './audio.js';
 import { THEORYTAB_SONGS } from './data/songs.js';
 import { CHORD_TRENDS, FAMOUS_CADENCES } from './data/trends.js';
 import { THEORY_LESSONS } from './data/lessons.js';
+import { ChordCrushGame } from './chordcrush.js';
+import { LeadSheetRenderer } from './leadsheet.js';
 
 class SongsketchApp {
   constructor() {
     this.audio = new AudioEngine();
+    this.crushGame = new ChordCrushGame(this.audio, theory);
+    this.leadSheet = new LeadSheetRenderer(theory);
     
     // Default song state
     this.song = {
@@ -37,6 +41,9 @@ class SongsketchApp {
     this.currentLessonId = THEORY_LESSONS[0].id;
     this.trendsSelectedChord = 'I';
 
+    // TheoryTab filter sequence
+    this.activeProgressionFilter = [];
+
     // Playback engine properties
     this.isPlaying = false;
     this.playStartTime = 0;
@@ -56,6 +63,7 @@ class SongsketchApp {
     this.setupKeyboardShortcuts();
     this.setupModalsAndExport();
     this.setupTheoryTab();
+    this.setupChordCrush();
     this.setupTrends();
     this.setupAcademy();
     this.setupCheatSheet();
@@ -528,7 +536,6 @@ class SongsketchApp {
     let labelsHtml = '';
     for (let r = NUM_ROWS - 1; r >= 0; r--) {
       const pitchInfo = theory.rowToPitch(r, this.song.key, this.song.mode);
-      const isTonic = (r % 7) === 0;
       labelsHtml += `
         <div class="degree-label-cell" data-row="${r}">
           <span class="degree-badge" style="background-color: ${pitchInfo.color}">${pitchInfo.degreeLabel}</span>
@@ -707,7 +714,6 @@ class SongsketchApp {
     let blackHtml = '';
     blackNotes.forEach(bn => {
       const midi = 48 + bn.pc;
-      const noteName = theory.getNoteName(bn.pc % 12, false);
       blackHtml += `
         <div class="black-key" data-midi="${midi}" style="left: ${bn.leftOffset}%"></div>
       `;
@@ -727,7 +733,6 @@ class SongsketchApp {
   // --- Keyboard Shortcuts ---
   setupKeyboardShortcuts() {
     document.addEventListener('keydown', (e) => {
-      // Don't trigger if typing in text input
       if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
 
       if (e.code === 'Space') {
@@ -735,9 +740,7 @@ class SongsketchApp {
         if (this.isPlaying) this.stopPlayback();
         else this.startPlayback();
       } else if (e.key >= '1' && e.key <= '7') {
-        // Quick insert diatonic chord on scale degree 1..7
         const degIndex = parseInt(e.key) - 1;
-        const diatonicDegrees = theory.MODES[this.song.mode] ? theory.MODES[this.song.mode].degreeNames : theory.MODES.major.degreeNames;
         const diatonicKeys = Object.keys(theory.CHORD_DEFINITIONS[this.song.mode] || theory.CHORD_DEFINITIONS.major)
           .filter(k => (theory.CHORD_DEFINITIONS[this.song.mode] || theory.CHORD_DEFINITIONS.major)[k].type === 'diatonic');
         
@@ -841,6 +844,38 @@ class SongsketchApp {
       fileInput.value = '';
     });
 
+    // Lead Sheet & Guitar Tabs Modal
+    const leadsheetModal = document.getElementById('leadsheet-modal');
+    const leadsheetContainer = document.getElementById('leadsheet-content-container');
+    const btnLeadSheet = document.getElementById('leadsheet-btn');
+    const btnShowSheetMusic = document.getElementById('btn-show-sheet-music');
+    const btnShowGuitarTabs = document.getElementById('btn-show-guitar-tabs');
+    const btnCloseLeadSheet = document.getElementById('leadsheet-modal-close-btn');
+
+    btnLeadSheet.addEventListener('click', () => {
+      leadsheetModal.classList.add('open');
+      btnShowSheetMusic.classList.add('btn-primary');
+      btnShowGuitarTabs.classList.remove('btn-primary');
+      this.leadSheet.renderLeadSheet(leadsheetContainer, this.song);
+    });
+
+    btnShowSheetMusic.addEventListener('click', () => {
+      btnShowSheetMusic.classList.add('btn-primary');
+      btnShowGuitarTabs.classList.remove('btn-primary');
+      this.leadSheet.renderLeadSheet(leadsheetContainer, this.song);
+    });
+
+    btnShowGuitarTabs.addEventListener('click', () => {
+      btnShowGuitarTabs.classList.add('btn-primary');
+      btnShowSheetMusic.classList.remove('btn-primary');
+      this.leadSheet.renderGuitarTabs(leadsheetContainer, this.song);
+    });
+
+    btnCloseLeadSheet.addEventListener('click', () => leadsheetModal.classList.remove('open'));
+    leadsheetModal.addEventListener('click', (e) => {
+      if (e.target === leadsheetModal) leadsheetModal.classList.remove('open');
+    });
+
     // Shortcuts Modal
     const modal = document.getElementById('shortcuts-modal');
     document.getElementById('shortcuts-btn').addEventListener('click', () => modal.classList.add('open'));
@@ -862,6 +897,9 @@ class SongsketchApp {
     const grid = document.getElementById('theorytab-songs-grid');
     const searchInput = document.getElementById('theorytab-search');
     const genrePills = document.querySelectorAll('.genre-pill');
+    const progButtons = document.querySelectorAll('.prog-builder-btn');
+    const clearProgBtn = document.getElementById('clear-prog-filter-btn');
+    const activeFilterDisplay = document.getElementById('active-filter-sequence');
 
     let currentGenre = 'All';
 
@@ -872,11 +910,30 @@ class SongsketchApp {
                              song.artist.toLowerCase().includes(query) ||
                              song.chords.join(' ').toLowerCase().includes(query);
         const matchesGenre = currentGenre === 'All' || song.genre.includes(currentGenre);
-        return matchesQuery && matchesGenre;
+
+        // Check if song matches chord progression filter sequence
+        let matchesProg = true;
+        if (this.activeProgressionFilter.length > 0) {
+          const songChordsStr = song.chords.join(',');
+          const filterStr = this.activeProgressionFilter.join(',');
+          matchesProg = songChordsStr.includes(filterStr);
+        }
+
+        return matchesQuery && matchesGenre && matchesProg;
       });
 
+      // Update active filter sequence UI
+      if (this.activeProgressionFilter.length === 0) {
+        activeFilterDisplay.innerHTML = `<span style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">Active progression filter: None</span>`;
+      } else {
+        activeFilterDisplay.innerHTML = `
+          <span style="font-size: 0.8rem; color: #fff; font-weight:700;">Filter:</span>
+          ${this.activeProgressionFilter.map(c => `<span class="sequence-chip">${c}</span>`).join(' ➔ ')}
+        `;
+      }
+
       if (filtered.length === 0) {
-        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">No songs found matching your search.</div>`;
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">No songs found matching this progression or search query.</div>`;
         return;
       }
 
@@ -945,6 +1002,19 @@ class SongsketchApp {
       });
     });
 
+    // Chord Progression Builder Buttons
+    progButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.activeProgressionFilter.push(btn.dataset.num);
+        renderSongs();
+      });
+    });
+
+    clearProgBtn.addEventListener('click', () => {
+      this.activeProgressionFilter = [];
+      renderSongs();
+    });
+
     renderSongs();
   }
 
@@ -961,7 +1031,6 @@ class SongsketchApp {
       melody: JSON.parse(JSON.stringify(tabSong.melody))
     };
 
-    // Update transport selectors
     document.getElementById('key-select').value = this.song.key;
     document.getElementById('mode-select').value = this.song.mode;
     document.getElementById('bpm-slider').value = this.song.bpm;
@@ -976,7 +1045,6 @@ class SongsketchApp {
   }
 
   previewTheoryTabSong(song) {
-    // Quick preview of the chords progression
     this.audio.resume();
     const stepSec = 60 / song.bpm / 4;
     const now = this.audio.ctx.currentTime + 0.05;
@@ -992,6 +1060,128 @@ class SongsketchApp {
     });
 
     this.showToast(`Playing preview for ${song.title}...`);
+  }
+
+  // --- Chord Crush (Ear Training Game) Setup ---
+  setupChordCrush() {
+    const levelDisplay = document.getElementById('crush-level-display');
+    const streakDisplay = document.getElementById('crush-streak-display');
+    const scoreDisplay = document.getElementById('crush-score-display');
+    const levelDesc = document.getElementById('crush-level-desc');
+    const listenBtn = document.getElementById('btn-crush-listen');
+    const slotsContainer = document.getElementById('crush-guess-slots');
+    const choicesGrid = document.getElementById('crush-choices-grid');
+    const clearBtn = document.getElementById('btn-crush-clear');
+    const submitBtn = document.getElementById('btn-crush-submit');
+    const nextBtn = document.getElementById('btn-crush-next');
+    const feedbackBanner = document.getElementById('crush-feedback-banner');
+
+    let currentGuess = [];
+
+    const startRound = () => {
+      currentGuess = [];
+      const question = this.crushGame.startNewRound();
+      const config = this.crushGame.levelConfigs[this.crushGame.level];
+
+      levelDisplay.textContent = this.crushGame.level;
+      streakDisplay.textContent = `${this.crushGame.streak} 🔥`;
+      scoreDisplay.textContent = this.crushGame.score;
+      levelDesc.textContent = config.name;
+
+      feedbackBanner.style.display = 'none';
+      submitBtn.style.display = 'inline-flex';
+      nextBtn.style.display = 'none';
+
+      // Render slots
+      slotsContainer.innerHTML = Array.from({ length: config.length }, (_, i) => `
+        <div class="guess-slot" id="crush-slot-${i}">?</div>
+      `).join('');
+
+      // Auto-fill slot 0 since it is tonic (I)
+      currentGuess.push('I');
+      const slot0 = document.getElementById('crush-slot-0');
+      if (slot0) {
+        slot0.textContent = 'I';
+        slot0.classList.add('filled');
+        slot0.style.color = 'var(--deg-1)';
+      }
+
+      // Render choices buttons
+      const choices = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'];
+      choicesGrid.innerHTML = choices.map(ch => {
+        const details = theory.getChordDetails(ch, 0, 'major', 0);
+        return `
+          <button class="choice-chord-btn" data-chord="${ch}" style="border-bottom-color: ${details.color}; color: ${details.color}">
+            ${ch}
+          </button>
+        `;
+      }).join('');
+
+      choicesGrid.querySelectorAll('.choice-chord-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (currentGuess.length < config.length) {
+            const ch = btn.dataset.chord;
+            const idx = currentGuess.length;
+            currentGuess.push(ch);
+            const slot = document.getElementById(`crush-slot-${idx}`);
+            if (slot) {
+              const details = theory.getChordDetails(ch, 0, 'major', 0);
+              slot.textContent = ch;
+              slot.classList.add('filled');
+              slot.style.color = details.color;
+            }
+            // Audition chord
+            const details = theory.getChordDetails(ch, 0, 'major', 0);
+            this.audio.previewNotes(theory.getChordVoicing(details, 3).all, 'piano');
+          }
+        });
+      });
+
+      // Play audio prompt
+      this.crushGame.playCurrentQuestion();
+    };
+
+    listenBtn.addEventListener('click', () => {
+      this.crushGame.playCurrentQuestion();
+    });
+
+    clearBtn.addEventListener('click', () => {
+      currentGuess = ['I'];
+      const config = this.crushGame.levelConfigs[this.crushGame.level];
+      for (let i = 1; i < config.length; i++) {
+        const slot = document.getElementById(`crush-slot-${i}`);
+        if (slot) {
+          slot.textContent = '?';
+          slot.classList.remove('filled');
+          slot.style.color = '';
+        }
+      }
+    });
+
+    submitBtn.addEventListener('click', () => {
+      const res = this.crushGame.submitGuess(currentGuess);
+      if (!res) return;
+
+      scoreDisplay.textContent = res.score;
+      streakDisplay.textContent = `${res.streak} 🔥`;
+      levelDisplay.textContent = res.level;
+
+      if (res.isCorrect) {
+        feedbackBanner.className = 'feedback-banner correct';
+        feedbackBanner.innerHTML = `🎉 Correct! Perfect ear! The progression is <strong>${res.actual.join(' ➔ ')}</strong>. +${100 * res.level} pts`;
+      } else {
+        feedbackBanner.className = 'feedback-banner wrong';
+        feedbackBanner.innerHTML = `❌ Not quite! The actual progression was <strong>${res.actual.join(' ➔ ')}</strong>. Try the next one!`;
+      }
+
+      feedbackBanner.style.display = 'block';
+      submitBtn.style.display = 'none';
+      nextBtn.style.display = 'inline-flex';
+    });
+
+    nextBtn.addEventListener('click', startRound);
+
+    startRound();
   }
 
   // --- Trends Tab Setup ---
