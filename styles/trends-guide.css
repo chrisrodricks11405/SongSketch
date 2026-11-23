@@ -1,0 +1,236 @@
+/* styles/trends-guide.css - Trends Probability, Theory Academy & Cheat Sheet */
+
+/* Trends Tool */
+.trends-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.trends-header-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.trends-matrix-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+}
+
+@media (max-width: 860px) {
+  .trends-matrix-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.prob-bars-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prob-bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.prob-bar-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.prob-bar-track {
+  height: 24px;
+  background: var(--bg-surface);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--border);
+}
+
+.prob-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), #60a5fa);
+  border-radius: 5px;
+  transition: width 0.4s ease;
+}
+
+/* Famous Cadences */
+.cadence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.cadence-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cadence-formula {
+  font-family: monospace;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 6px 0;
+}
+
+.cadence-examples {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+/* Theory Academy Guide */
+.academy-container {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 860px) {
+  .academy-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.academy-sidebar {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  height: fit-content;
+}
+
+.lesson-nav-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.lesson-nav-item button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.lesson-nav-item button:hover {
+  background: var(--bg-surface);
+  color: var(--text-main);
+}
+
+.lesson-nav-item.active button {
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.lesson-content-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow-sm);
+}
+
+.lesson-content-card h2 {
+  font-size: 1.6rem;
+  margin-bottom: 6px;
+}
+
+.lesson-content-card .subtitle {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.lesson-body {
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.lesson-body p {
+  margin-bottom: 14px;
+}
+
+.lesson-body ul {
+  margin: 12px 0 18px 24px;
+}
+
+.lesson-body li {
+  margin-bottom: 6px;
+}
+
+.lesson-tip-box {
+  background: var(--bg-surface);
+  border-left: 4px solid var(--warning);
+  padding: 14px 18px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin: 20px 0;
+  font-size: 0.9rem;
+}
+
+.lesson-action-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* Cheat Sheet Table */
+.cheat-sheet-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  overflow-x: auto;
+}
+
+.theory-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  min-width: 650px;
+}
+
+.theory-table th,
+.theory-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.theory-table th {
+  background: var(--bg-surface);
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.theory-table tr:hover td {
+  background: var(--bg-hover);
+}

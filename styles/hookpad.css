@@ -1,0 +1,545 @@
+/* styles/hookpad.css - Hookpad Studio DAW Styling */
+
+.hookpad-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Transport Bar */
+.transport-bar {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 18px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+.transport-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.transport-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.transport-select,
+.transport-input {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-main);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 6px 10px;
+  cursor: pointer;
+  outline: none;
+}
+
+.transport-select:focus,
+.transport-input:focus {
+  border-color: var(--primary);
+}
+
+.bpm-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bpm-control input[type="range"] {
+  width: 90px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.bpm-value {
+  font-family: monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  min-width: 32px;
+}
+
+.play-btn {
+  min-width: 110px;
+  height: 38px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.play-btn.playing {
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+/* Studio Workspace & Roll */
+.studio-workspace {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.timeline-scroll-wrapper {
+  overflow-x: auto;
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-surface);
+  user-select: none;
+}
+
+.timeline-content {
+  position: relative;
+  width: max-content;
+  min-width: 100%;
+}
+
+/* Playhead */
+.playhead-cursor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #ff3366;
+  box-shadow: 0 0 6px rgba(255, 51, 102, 0.8);
+  pointer-events: none;
+  z-index: 50;
+  display: none;
+}
+
+.playhead-cursor::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -5px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid #ff3366;
+}
+
+/* Chord Lane */
+.chord-lane {
+  display: flex;
+  height: 64px;
+  background: var(--bg-card);
+  border-bottom: 2px solid var(--border);
+}
+
+.lane-header {
+  width: 72px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  border-right: 2px solid var(--border);
+  background: var(--bg-surface);
+}
+
+.chord-slots-container {
+  display: flex;
+  flex: 1;
+}
+
+.chord-slot {
+  width: 88px; /* 4 steps * 22px */
+  height: 100%;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.1s ease;
+  border-top: 4px solid transparent;
+}
+
+.chord-slot:hover {
+  background: var(--bg-hover);
+}
+
+.chord-slot.selected {
+  background: rgba(37, 99, 235, 0.12);
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+.chord-slot.active-playback {
+  background: rgba(37, 99, 235, 0.25) !important;
+}
+
+.chord-slot .numeral {
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.chord-slot .chord-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.chord-slot.empty .numeral {
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
+/* Piano Roll Melody Grid */
+.piano-roll-container {
+  display: flex;
+  position: relative;
+}
+
+.piano-roll-labels {
+  width: 72px;
+  flex: none;
+  background: var(--bg-card);
+  border-right: 2px solid var(--border);
+  z-index: 10;
+}
+
+.degree-label-cell {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.degree-label-cell:hover {
+  background: var(--bg-hover);
+}
+
+.degree-badge {
+  width: 18px;
+  height: 16px;
+  border-radius: 3px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+}
+
+.roll-note-name {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.piano-roll-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.roll-row {
+  display: flex;
+  height: 22px;
+}
+
+.roll-cell {
+  width: 22px;
+  height: 22px;
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  position: relative;
+}
+
+[data-theme="dark"] .roll-cell {
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.roll-cell.beat-bar {
+  border-right: 2px solid var(--border);
+}
+
+.roll-cell.half-beat {
+  border-right: 1px dashed var(--border);
+}
+
+.roll-cell.tonic-row {
+  background: rgba(231, 76, 60, 0.06);
+}
+
+.roll-cell:hover {
+  background: rgba(37, 99, 235, 0.2);
+}
+
+/* Placed Melody Note */
+.roll-note {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  left: 1px;
+  border-radius: 4px;
+  z-index: 20;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  pointer-events: none;
+}
+
+/* Palette & Controls Section */
+.bottom-controls-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 960px) {
+  .bottom-controls-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chord-palette-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.palette-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.palette-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.palette-tab-btn {
+  background: transparent;
+  border: none;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.palette-tab-btn.active {
+  background: var(--bg-surface);
+  color: var(--text-main);
+}
+
+.palette-buttons-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.palette-chord-btn {
+  min-width: 62px;
+  height: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  border-bottom-width: 4px;
+  background: var(--bg-card);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.palette-chord-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.palette-chord-btn .numeral {
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.palette-chord-btn .label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* Inversion & Duration Sub-controls */
+.modifier-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.modifier-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modifier-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+
+.btn-pill {
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  border-radius: 20px;
+}
+
+.btn-pill.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+/* Smart Suggestions Card */
+.suggestions-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  flex: 1;
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.suggestion-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--primary);
+}
+
+.suggestion-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.suggestion-badge {
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.suggestion-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.suggestion-prob {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* Piano Keyboard Display */
+.piano-keyboard-widget {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  margin-top: 14px;
+}
+
+.keyboard-keys-wrapper {
+  display: flex;
+  position: relative;
+  height: 90px;
+  user-select: none;
+}
+
+.white-key {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 0 0 5px 5px;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  transition: background 0.1s;
+}
+
+.white-key.active {
+  background: #ffcc00 !important;
+  color: #000;
+}
+
+.black-key {
+  position: absolute;
+  width: 28px;
+  height: 56px;
+  background: #1e293b;
+  border-radius: 0 0 4px 4px;
+  z-index: 2;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.black-key.active {
+  background: #ff9900 !important;
+}
