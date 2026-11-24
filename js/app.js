@@ -14,7 +14,7 @@ class SongsketchApp {
     this.crushGame = new ChordCrushGame(this.audio, theory);
     this.leadSheet = new LeadSheetRenderer(theory);
     
-    // Default song state
+    // Song model (measures & beats)
     this.song = {
       title: 'My Songsketch',
       key: 0, // 0 = C
@@ -22,34 +22,44 @@ class SongsketchApp {
       bpm: 100,
       bars: 4,
       loop: true,
-      chords: ['I', 'V', 'vi', 'IV', 'I', 'V', 'IV', 'I'],
+      timeSignature: '4/4',
+      // Chords: array of objects { numeral, duration (in beats), inversion, quality }
+      chords: [
+        { numeral: 'I', duration: 4, inversion: 0 },
+        { numeral: 'V', duration: 4, inversion: 0 },
+        { numeral: 'vi', duration: 4, inversion: 0 },
+        { numeral: 'IV', duration: 4, inversion: 0 }
+      ],
+      // Melody: array of objects { row (0..14), step (in 16ths), duration (in 16ths) }
       melody: [
-        { row: 7, step: 0, duration: 2 },
-        { row: 9, step: 2, duration: 2 },
-        { row: 11, step: 4, duration: 2 },
-        { row: 12, step: 6, duration: 2 },
-        { row: 11, step: 8, duration: 2 },
-        { row: 9, step: 10, duration: 2 },
-        { row: 7, step: 12, duration: 4 }
+        { row: 7, step: 0, duration: 4 },
+        { row: 9, step: 4, duration: 4 },
+        { row: 11, step: 8, duration: 4 },
+        { row: 12, step: 12, duration: 4 },
+        { row: 11, step: 16, duration: 4 },
+        { row: 9, step: 20, duration: 4 },
+        { row: 7, step: 24, duration: 8 }
       ]
     };
 
-    this.selectedSlot = 0;
+    this.paletteMode = 'chords'; // 'chords' or 'notes'
+    this.selectedChordIndex = 0;
+    this.selectedDurationBeats = 4; // 4 beats (Whole note), 2, 1, 0.5, 0.25
     this.selectedInversion = 0;
-    this.selectedNoteDuration = 2; // 2 sixteenths = eighth note
+    this.selectedQuality = '';
     this.activeTab = 'hookpad';
     this.currentLessonId = THEORY_LESSONS[0].id;
-    this.trendsSelectedChord = 'I';
 
-    // TheoryTab filter sequence
-    this.activeProgressionFilter = [];
+    // TheoryTab Graph state
+    this.graphPath = ['I'];
 
-    // Playback engine properties
+    // Playback state
     this.isPlaying = false;
     this.playStartTime = 0;
     this.playbackTimer = null;
     this.animFrameId = null;
-    this.totalSteps = 32;
+    this.stepsPerMeasure = 16;
+    this.totalSteps = 64;
 
     this.init();
   }
@@ -70,7 +80,7 @@ class SongsketchApp {
 
     this.renderHookpad();
     this.renderPianoKeyboard();
-    this.updateSuggestions();
+    this.updateMagicPalette();
   }
 
   // --- Persistence & State Loading ---
@@ -80,7 +90,7 @@ class SongsketchApp {
         const hashData = decodeURIComponent(atob(window.location.hash.slice(1)));
         const parsed = JSON.parse(hashData);
         if (parsed && parsed.chords) {
-          this.song = Object.assign(this.song, parsed);
+          this.normalizeImportedSong(parsed);
           this.showToast('Song loaded from share link!');
           return;
         }
@@ -89,12 +99,36 @@ class SongsketchApp {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && parsed.chords) {
-          this.song = Object.assign(this.song, parsed);
+          this.normalizeImportedSong(parsed);
         }
       }
     } catch (e) {
-      console.warn('Could not load song state from hash/storage', e);
+      console.warn('Could not load song state', e);
     }
+  }
+
+  normalizeImportedSong(data) {
+    this.song.title = data.title || 'Untitled';
+    this.song.key = data.key !== undefined ? data.key : 0;
+    this.song.mode = data.mode || 'major';
+    this.song.bpm = data.bpm || 100;
+    this.song.bars = data.bars || 4;
+    this.song.loop = data.loop !== undefined ? data.loop : true;
+
+    // Ensure chords have duration
+    if (Array.isArray(data.chords)) {
+      this.song.chords = data.chords.map(c => {
+        if (typeof c === 'string') return { numeral: c, duration: 4, inversion: 0 };
+        return {
+          numeral: c.numeral || 'I',
+          duration: c.duration || 4,
+          inversion: c.inversion || 0,
+          quality: c.quality || ''
+        };
+      });
+    }
+
+    this.song.melody = Array.isArray(data.melody) ? data.melody : [];
   }
 
   saveToStorage() {
@@ -131,8 +165,7 @@ class SongsketchApp {
     const navButtons = document.querySelectorAll('.nav-tab-btn');
     navButtons.forEach(btn => {
       btn.addEventListener('click', () => {
-        const tab = btn.dataset.tab;
-        this.switchTab(tab);
+        this.switchTab(btn.dataset.tab);
       });
     });
   }
@@ -146,6 +179,10 @@ class SongsketchApp {
       p.classList.toggle('active', p.id === `tab-${tabId}`);
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    if (tabId === 'chordcrush') {
+      this.crushGame.playFullProgression();
+    }
   }
 
   // --- Transport Controls ---
@@ -154,12 +191,13 @@ class SongsketchApp {
     const modeSelect = document.getElementById('mode-select');
     const bpmSlider = document.getElementById('bpm-slider');
     const bpmDisplay = document.getElementById('bpm-display');
-    const barsSelect = document.getElementById('bars-select');
-    const loopToggle = document.getElementById('loop-toggle');
     const playBtn = document.getElementById('play-btn');
-    const drumSelect = document.getElementById('drum-select');
-    const instSelect = document.getElementById('inst-select');
+    const loopBtn = document.getElementById('loop-toggle-btn');
     const metronomeBtn = document.getElementById('metronome-btn');
+    const meterBtn = document.getElementById('meter-btn');
+    const instSelect = document.getElementById('inst-select');
+    const drumSelect = document.getElementById('drum-select');
+    const presetSelect = document.getElementById('progression-preset-select');
 
     // Populate Key options
     keySelect.innerHTML = theory.NOTE_NAMES_SHARP.map((note, idx) => {
@@ -172,8 +210,6 @@ class SongsketchApp {
     modeSelect.value = this.song.mode;
     bpmSlider.value = this.song.bpm;
     bpmDisplay.textContent = this.song.bpm;
-    barsSelect.value = this.song.bars;
-    loopToggle.checked = this.song.loop;
 
     keySelect.addEventListener('change', (e) => {
       this.song.key = parseInt(e.target.value);
@@ -185,8 +221,7 @@ class SongsketchApp {
     modeSelect.addEventListener('change', (e) => {
       this.song.mode = e.target.value;
       this.renderHookpad();
-      this.renderChordPalette();
-      this.updateSuggestions();
+      this.updateMagicPalette();
       this.saveToStorage();
     });
 
@@ -196,65 +231,75 @@ class SongsketchApp {
       this.saveToStorage();
     });
 
-    barsSelect.addEventListener('change', (e) => {
-      this.changeBars(parseInt(e.target.value));
-    });
-
-    loopToggle.addEventListener('change', (e) => {
-      this.song.loop = e.target.checked;
+    loopBtn.addEventListener('click', () => {
+      this.song.loop = !this.song.loop;
+      loopBtn.classList.toggle('active', this.song.loop);
       this.saveToStorage();
     });
 
-    playBtn.addEventListener('click', () => {
-      if (this.isPlaying) {
-        this.stopPlayback();
-      } else {
-        this.startPlayback();
-      }
+    metronomeBtn.addEventListener('click', () => {
+      this.audio.metronomeEnabled = !this.audio.metronomeEnabled;
+      metronomeBtn.classList.toggle('active', this.audio.metronomeEnabled);
     });
 
-    drumSelect.addEventListener('change', (e) => {
-      this.audio.drumStyle = e.target.value;
+    meterBtn.addEventListener('click', () => {
+      this.song.timeSignature = this.song.timeSignature === '4/4' ? '3/4' : '4/4';
+      document.getElementById('meter-val').textContent = this.song.timeSignature;
+      this.stepsPerMeasure = this.song.timeSignature === '4/4' ? 16 : 12;
+      this.renderHookpad();
+    });
+
+    playBtn.addEventListener('click', () => {
+      if (this.isPlaying) this.stopPlayback();
+      else this.startPlayback();
     });
 
     instSelect.addEventListener('change', (e) => {
       this.audio.instrument = e.target.value;
     });
 
-    metronomeBtn.addEventListener('click', () => {
-      this.audio.metronomeEnabled = !this.audio.metronomeEnabled;
-      metronomeBtn.classList.toggle('active', this.audio.metronomeEnabled);
-      metronomeBtn.style.color = this.audio.metronomeEnabled ? 'var(--primary)' : '';
+    drumSelect.addEventListener('change', (e) => {
+      this.audio.drumStyle = e.target.value;
+    });
+
+    presetSelect.addEventListener('change', (e) => {
+      const val = e.target.value;
+      if (!val) return;
+      const cadence = FAMOUS_CADENCES.find(c => c.name === val);
+      if (cadence) {
+        this.loadProgression(cadence.chords);
+      }
+      presetSelect.value = '';
     });
   }
 
-  changeBars(newBars) {
+  loadProgression(chordsArray) {
     this.stopPlayback();
-    this.song.bars = newBars;
-    const requiredSlots = newBars * 2;
-    const newChords = Array(requiredSlots).fill(null);
-    for (let i = 0; i < Math.min(this.song.chords.length, requiredSlots); i++) {
-      newChords[i] = this.song.chords[i];
-    }
-    this.song.chords = newChords;
-    this.song.melody = this.song.melody.filter(n => n.step < newBars * 8);
-    this.selectedSlot = Math.min(this.selectedSlot, requiredSlots - 1);
+    this.song.chords = chordsArray.map(c => ({
+      numeral: c,
+      duration: 4, // 1 bar each
+      inversion: 0
+    }));
+    this.song.bars = chordsArray.length;
+    this.selectedChordIndex = 0;
     this.renderHookpad();
     this.saveToStorage();
+    this.showToast('Progression loaded!');
   }
 
-  // --- Playback Engine ---
+  // --- Audio Playback Engine ---
   async startPlayback() {
     await this.audio.resume();
     this.isPlaying = true;
     const playBtn = document.getElementById('play-btn');
-    playBtn.textContent = '⏹ Stop';
+    playBtn.textContent = '⏹';
     playBtn.classList.add('playing');
 
-    const playhead = document.getElementById('playhead-cursor');
+    const playhead = document.getElementById('hookpad-playhead');
     playhead.style.display = 'block';
 
-    this.totalSteps = this.song.bars * 8;
+    this.stepsPerMeasure = this.song.timeSignature === '4/4' ? 16 : 12;
+    this.totalSteps = this.song.bars * this.stepsPerMeasure;
     this.playStartTime = this.audio.ctx.currentTime + 0.05;
 
     this.schedulePlaybackLoop(this.playStartTime);
@@ -268,63 +313,69 @@ class SongsketchApp {
 
     const playBtn = document.getElementById('play-btn');
     if (playBtn) {
-      playBtn.textContent = '▶ Play';
+      playBtn.textContent = '▶';
       playBtn.classList.remove('playing');
     }
 
-    const playhead = document.getElementById('playhead-cursor');
+    const playhead = document.getElementById('hookpad-playhead');
     if (playhead) playhead.style.display = 'none';
 
-    document.querySelectorAll('.chord-slot').forEach(el => el.classList.remove('active-playback'));
+    document.querySelectorAll('.hook-chord-block').forEach(el => el.classList.remove('playing'));
     document.querySelectorAll('.white-key, .black-key').forEach(el => el.classList.remove('active'));
   }
 
   schedulePlaybackLoop(startTime) {
     if (!this.isPlaying) return;
-    const stepSec = 60 / this.song.bpm / 4;
+    const stepSec = 60 / this.song.bpm / 4; // sixteenth note seconds
     const loopDuration = this.totalSteps * stepSec;
 
-    // Schedule chords and bass
+    // Schedule Chords and Bass
+    let chordStartStep = 0;
     this.song.chords.forEach((chordData, i) => {
       if (!chordData) return;
-      const numeral = typeof chordData === 'string' ? chordData : chordData.numeral;
+      const numeral = chordData.numeral;
       const inv = chordData.inversion || 0;
       const details = theory.getChordDetails(numeral, this.song.key, this.song.mode, inv);
-      const voicing = theory.getChordVoicing(details, 3);
-      const chordTime = startTime + i * 4 * stepSec;
-      const dur = 4 * stepSec;
+      const voicing = theory.getChordVoicing(details, 4);
 
-      voicing.treble.forEach(m => {
-        if (this.audio.instrument === 'piano') this.audio.playPianoNote(this.audio.ctx, this.audio.chordsGain, m, chordTime, dur, 0.7);
-        else if (this.audio.instrument === 'rhodes') this.audio.playRhodesNote(this.audio.ctx, this.audio.chordsGain, m, chordTime, dur, 0.7);
-        else this.audio.playSynthLeadNote(this.audio.ctx, this.audio.chordsGain, m, chordTime, dur, 0.6);
+      const durSteps = chordData.duration * 4; // 1 beat = 4 sixteenths
+      const chordTime = startTime + chordStartStep * stepSec;
+      const durSec = durSteps * stepSec;
+
+      voicing.treble.forEach(p => {
+        if (this.audio.instrument === 'piano') this.audio.playPianoNote(this.audio.ctx, this.audio.chordsGain, p, chordTime, durSec, 0.75);
+        else if (this.audio.instrument === 'rhodes') this.audio.playRhodesNote(this.audio.ctx, this.audio.chordsGain, p, chordTime, durSec, 0.75);
+        else if (this.audio.instrument === 'guitar') this.audio.playGuitarNote(this.audio.ctx, this.audio.chordsGain, p, chordTime, durSec, 0.75);
+        else if (this.audio.instrument === 'strings') this.audio.playStringsNote(this.audio.ctx, this.audio.chordsGain, p, chordTime, durSec, 0.7);
+        else this.audio.playSynthLeadNote(this.audio.ctx, this.audio.chordsGain, p, chordTime, durSec, 0.65);
       });
 
-      this.audio.playBassNote(this.audio.ctx, this.audio.bassGain, 36 + details.bassPc, chordTime, dur, 0.85);
+      this.audio.playBassNote(this.audio.ctx, this.audio.bassGain, 36 + details.bassPc, chordTime, durSec, 0.85);
+      chordStartStep += durSteps;
     });
 
-    // Schedule melody
+    // Schedule Melody
     this.song.melody.forEach(note => {
       const pitch = theory.rowToPitch(note.row, this.song.key, this.song.mode).midi;
       const noteTime = startTime + note.step * stepSec;
-      const dur = (note.duration || 1) * stepSec;
-      this.audio.playSynthLeadNote(this.audio.ctx, this.audio.melodyGain, pitch, noteTime, dur, 0.85);
+      const durSec = (note.duration || 4) * stepSec;
+      this.audio.playSynthLeadNote(this.audio.ctx, this.audio.melodyGain, pitch, noteTime, durSec, 0.85);
     });
 
-    // Schedule rhythm & metronome
+    // Schedule Drums & Metronome
     for (let s = 0; s < this.totalSteps; s++) {
       const beatTime = startTime + s * stepSec;
-      const beatInBar = s % 8; // 8 16ths per half bar
+      const beatInMeasure = s % this.stepsPerMeasure;
 
-      if (this.audio.metronomeEnabled && s % 2 === 0) {
-        this.audio.playMetronomeClick(this.audio.ctx, this.audio.masterGain, beatTime, s % 8 === 0);
+      if (this.audio.metronomeEnabled && s % 4 === 0) {
+        this.audio.playMetronomeClick(this.audio.ctx, this.audio.metronomeGain, beatTime, beatInMeasure === 0);
       }
 
       if (this.audio.drumStyle !== 'none') {
-        if (beatInBar === 0 || beatInBar === 4) {
+        if (beatInMeasure === 0 || beatInMeasure === 8) {
           this.audio.playKick(this.audio.ctx, this.audio.drumsGain, beatTime);
         }
-        if (beatInBar === 4) {
+        if (beatInMeasure === 4 || beatInMeasure === 12) {
           this.audio.playSnare(this.audio.ctx, this.audio.drumsGain, beatTime);
         }
         if (s % 2 === 0) {
@@ -352,22 +403,26 @@ class SongsketchApp {
 
     if (elapsed >= 0) {
       const currentStep = (elapsed / stepSec) % this.totalSteps;
-      const cellWidth = 22; // width of cell in px
-      const labelOffset = 72; // width of header in px
+      const cellWidth = 11; // 1 step = 11px (1 bar of 16 steps = 176px)
+      const labelOffset = 64; // width of headers
       const pxPosition = labelOffset + currentStep * cellWidth;
 
-      const playhead = document.getElementById('playhead-cursor');
+      const playhead = document.getElementById('hookpad-playhead');
       if (playhead) playhead.style.left = `${pxPosition}px`;
 
-      // Highlight active chord slot
-      const activeSlotIndex = Math.floor(currentStep / 4);
-      document.querySelectorAll('.chord-slot').forEach((el, idx) => {
-        el.classList.toggle('active-playback', idx === activeSlotIndex);
+      // Highlight active chord block
+      let accumSteps = 0;
+      document.querySelectorAll('.hook-chord-block').forEach((block, idx) => {
+        const chord = this.song.chords[idx];
+        const durSteps = chord ? chord.duration * 4 : 16;
+        const isCurrent = currentStep >= accumSteps && currentStep < accumSteps + durSteps;
+        block.classList.toggle('playing', isCurrent);
+        accumSteps += durSteps;
       });
 
       // Animate piano keys for active notes
       const activeStepFloor = Math.floor(currentStep);
-      const activeNotes = this.song.melody.filter(n => activeStepFloor >= n.step && activeStepFloor < n.step + (n.duration || 1));
+      const activeNotes = this.song.melody.filter(n => activeStepFloor >= n.step && activeStepFloor < n.step + (n.duration || 4));
       
       document.querySelectorAll('.white-key, .black-key').forEach(el => el.classList.remove('active'));
       activeNotes.forEach(n => {
@@ -380,40 +435,98 @@ class SongsketchApp {
     this.animFrameId = requestAnimationFrame(() => this.animatePlayhead());
   }
 
-  // --- Hookpad UI Setup & Rendering ---
+  // --- Hookpad Controls & Palette ---
   setupHookpadControls() {
-    const chordContainer = document.getElementById('chord-slots-container');
-    const rollGrid = document.getElementById('piano-roll-grid');
+    // Mode Switch: Chords vs Notes
+    const tabChords = document.getElementById('tab-mode-chords');
+    const tabNotes = document.getElementById('tab-mode-notes');
 
-    // Slot click handler
-    chordContainer.addEventListener('click', (e) => {
-      const slot = e.target.closest('.chord-slot');
-      if (slot) {
-        this.selectedSlot = parseInt(slot.dataset.index);
-        this.updateChordSlotSelection();
-        this.updateSuggestions();
+    tabChords.addEventListener('click', () => {
+      this.paletteMode = 'chords';
+      tabChords.classList.add('active');
+      tabNotes.classList.remove('active');
+      document.getElementById('inspector-heading').textContent = 'Chord Properties';
+      this.renderPaletteStrip();
+    });
+
+    tabNotes.addEventListener('click', () => {
+      this.paletteMode = 'notes';
+      tabNotes.classList.add('active');
+      tabChords.classList.remove('active');
+      document.getElementById('inspector-heading').textContent = 'Note Properties';
+      this.renderPaletteStrip();
+    });
+
+    // Duration Bar Buttons (4, 2, 1, 1/2, 1/4 beats)
+    document.querySelectorAll('.duration-bar-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.duration-bar-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.selectedDurationBeats = parseFloat(btn.dataset.beats);
+      });
+    });
+
+    // Inversion Pills
+    document.querySelectorAll('.inversion-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('.inversion-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        this.selectedInversion = parseInt(pill.dataset.inversion);
+        if (this.song.chords[this.selectedChordIndex]) {
+          this.song.chords[this.selectedChordIndex].inversion = this.selectedInversion;
+          this.renderChordLane();
+          this.saveToStorage();
+        }
+      });
+    });
+
+    // Quality Pills (Triad, 7, maj7, m7, sus4, add9)
+    document.querySelectorAll('[data-quality]').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('[data-quality]').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        this.selectedQuality = pill.dataset.quality;
+      });
+    });
+
+    // Delete Item
+    document.getElementById('btn-delete-item').addEventListener('click', () => {
+      if (this.paletteMode === 'chords') {
+        if (this.song.chords.length > 1) {
+          this.song.chords.splice(this.selectedChordIndex, 1);
+          this.selectedChordIndex = Math.max(0, this.selectedChordIndex - 1);
+          this.renderChordLane();
+          this.updateMagicPalette();
+          this.saveToStorage();
+        }
       }
     });
 
-    // Piano roll cell click handler
+    // Clear All
+    document.getElementById('btn-clear-all').addEventListener('click', () => {
+      this.song.chords = [{ numeral: 'I', duration: 4, inversion: 0 }];
+      this.song.melody = [];
+      this.selectedChordIndex = 0;
+      this.renderHookpad();
+      this.saveToStorage();
+      this.showToast('Workspace cleared');
+    });
+
+    // Melody Grid Click Handler
+    const rollGrid = document.getElementById('melody-lane-grid');
     rollGrid.addEventListener('click', (e) => {
-      const cell = e.target.closest('.roll-cell');
+      const cell = e.target.closest('.melody-grid-cell');
       if (!cell) return;
       const row = parseInt(cell.dataset.row);
       const step = parseInt(cell.dataset.step);
 
-      // Check if note already exists at this row/step
-      const existingIdx = this.song.melody.findIndex(n => n.row === row && step >= n.step && step < n.step + (n.duration || 1));
+      // Check if note exists
+      const existingIdx = this.song.melody.findIndex(n => n.row === row && step >= n.step && step < n.step + (n.duration || 4));
       if (existingIdx >= 0) {
         this.song.melody.splice(existingIdx, 1);
       } else {
-        // Add new note
-        this.song.melody.push({
-          row,
-          step,
-          duration: this.selectedNoteDuration
-        });
-        // Audition note sound
+        const durSteps = Math.max(1, Math.round(this.selectedDurationBeats * 4));
+        this.song.melody.push({ row, step, duration: durSteps });
         const pitch = theory.rowToPitch(row, this.song.key, this.song.mode).midi;
         this.audio.previewNotes([pitch], 'synth');
       }
@@ -421,260 +534,275 @@ class SongsketchApp {
       this.renderMelodyNotes();
       this.saveToStorage();
     });
-
-    // Inversion pill buttons
-    document.querySelectorAll('.inversion-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.inversion-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        this.selectedInversion = parseInt(btn.dataset.inversion);
-        
-        // Update currently selected chord's inversion if present
-        const currentChord = this.song.chords[this.selectedSlot];
-        if (currentChord) {
-          const numeral = typeof currentChord === 'string' ? currentChord : currentChord.numeral;
-          this.setChordAtSlot(numeral, this.selectedInversion, false);
-        }
-      });
-    });
-
-    // Note duration pill buttons
-    document.querySelectorAll('.duration-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        this.selectedNoteDuration = parseInt(btn.dataset.duration);
-      });
-    });
-
-    // Palette tab switching (Diatonic, 7ths, Secondary, Borrowed)
-    document.querySelectorAll('.palette-tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.palette-tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        this.renderChordPalette(btn.dataset.category);
-      });
-    });
-
-    // Clear and Preset progression dropdowns
-    const presetSelect = document.getElementById('progression-preset-select');
-    presetSelect.addEventListener('change', (e) => {
-      const val = e.target.value;
-      if (!val) return;
-      const cadence = FAMOUS_CADENCES.find(c => c.name === val);
-      if (cadence) {
-        this.loadProgression(cadence.chords);
-      }
-      presetSelect.value = '';
-    });
-  }
-
-  loadProgression(chordsArray) {
-    this.stopPlayback();
-    const numSlots = this.song.bars * 2;
-    this.song.chords = Array(numSlots).fill(null);
-    for (let i = 0; i < numSlots; i++) {
-      this.song.chords[i] = chordsArray[i % chordsArray.length];
-    }
-    this.renderHookpad();
-    this.saveToStorage();
-    this.showToast('Progression loaded!');
   }
 
   renderHookpad() {
-    this.renderChordSlots();
-    this.renderPianoRoll();
-    this.renderChordPalette('diatonic');
+    this.renderMeasureRuler();
+    this.renderMelodyRoll();
+    this.renderChordLane();
+    this.renderPaletteStrip();
+    this.updateMagicPalette();
   }
 
-  renderChordSlots() {
-    const container = document.getElementById('chord-slots-container');
-    const totalSlots = this.song.bars * 2;
-    
-    // Ensure array length matches
-    if (this.song.chords.length !== totalSlots) {
-      this.song.chords = Array.from({ length: totalSlots }, (_, i) => this.song.chords[i] || null);
+  renderMeasureRuler() {
+    const ruler = document.getElementById('measure-ruler');
+    let html = '';
+    for (let b = 0; b < this.song.bars; b++) {
+      html += `<div class="ruler-measure-cell">Measure ${b + 1}</div>`;
     }
-
-    container.innerHTML = this.song.chords.map((chordData, i) => {
-      const isSelected = i === this.selectedSlot;
-      if (!chordData) {
-        return `
-          <div class="chord-slot empty ${isSelected ? 'selected' : ''}" data-index="${i}">
-            <span class="numeral">+</span>
-            <span class="chord-name">empty</span>
-          </div>
-        `;
-      }
-
-      const numeral = typeof chordData === 'string' ? chordData : chordData.numeral;
-      const inv = chordData.inversion || 0;
-      const details = theory.getChordDetails(numeral, this.song.key, this.song.mode, inv);
-
-      return `
-        <div class="chord-slot ${isSelected ? 'selected' : ''}" data-index="${i}" style="border-top-color: ${details.color}">
-          <span class="numeral" style="color: ${details.color}">${details.fullDisplay}</span>
-          <span class="chord-name">${details.fullChordName}</span>
-        </div>
-      `;
-    }).join('');
+    ruler.innerHTML = html;
   }
 
-  updateChordSlotSelection() {
-    document.querySelectorAll('.chord-slot').forEach((slot, idx) => {
-      slot.classList.toggle('selected', idx === this.selectedSlot);
-    });
-  }
+  renderMelodyRoll() {
+    const headers = document.getElementById('melody-row-headers');
+    const grid = document.getElementById('melody-lane-grid');
+    const NUM_ROWS = 15;
+    this.stepsPerMeasure = this.song.timeSignature === '4/4' ? 16 : 12;
+    this.totalSteps = this.song.bars * this.stepsPerMeasure;
 
-  renderPianoRoll() {
-    const labelsContainer = document.getElementById('piano-roll-labels');
-    const gridContainer = document.getElementById('piano-roll-grid');
-    const totalSteps = this.song.bars * 8;
-    const NUM_ROWS = 15; // 2+ octaves
+    let headersHtml = '';
+    let gridHtml = '';
 
-    // 1. Render Row Labels (Scale degrees & note names)
-    let labelsHtml = '';
     for (let r = NUM_ROWS - 1; r >= 0; r--) {
       const pitchInfo = theory.rowToPitch(r, this.song.key, this.song.mode);
-      labelsHtml += `
-        <div class="degree-label-cell" data-row="${r}">
-          <span class="degree-badge" style="background-color: ${pitchInfo.color}">${pitchInfo.degreeLabel}</span>
-          <span class="roll-note-name">${pitchInfo.noteName}${pitchInfo.octave}</span>
+      const laneTint = `color-mix(in srgb, ${pitchInfo.color} 10%, transparent)`;
+
+      headersHtml += `
+        <div class="row-header-badge-cell" data-row="${r}" style="border-left: 4px solid ${pitchInfo.color}">
+          <span style="color: ${pitchInfo.color}">${pitchInfo.degreeLabel}</span>
+          <span style="color: var(--text-muted); font-size: 0.65rem;">${pitchInfo.noteName}${pitchInfo.octave}</span>
         </div>
       `;
-    }
-    labelsContainer.innerHTML = labelsHtml;
 
-    // 2. Render Grid Cells
-    let gridHtml = '';
-    for (let r = NUM_ROWS - 1; r >= 0; r--) {
-      const isTonic = (r % 7) === 0;
-      gridHtml += `<div class="roll-row" data-row="${r}">`;
-      for (let s = 0; s < totalSteps; s++) {
-        const isBar = s % 8 === 7;
-        const isHalfBeat = s % 2 === 1;
+      gridHtml += `<div class="melody-grid-row" data-row="${r}" style="--lane-tint: ${laneTint}">`;
+      for (let s = 0; s < this.totalSteps; s++) {
+        const isBar = s % this.stepsPerMeasure === this.stepsPerMeasure - 1;
+        const isBeat = s % 4 === 3;
         gridHtml += `
-          <div class="roll-cell ${isBar ? 'beat-bar' : ''} ${isHalfBeat ? 'half-beat' : ''} ${isTonic ? 'tonic-row' : ''}" 
+          <div class="melody-grid-cell ${isBar ? 'bar-boundary' : ''} ${isBeat ? 'beat-boundary' : ''}"
                data-row="${r}" data-step="${s}">
           </div>
         `;
       }
       gridHtml += `</div>`;
     }
-    gridContainer.innerHTML = gridHtml;
 
-    // 3. Render Melody Notes on top
+    headers.innerHTML = headersHtml;
+    grid.innerHTML = gridHtml;
+
     this.renderMelodyNotes();
   }
 
   renderMelodyNotes() {
-    // Remove previous notes
-    document.querySelectorAll('.roll-note').forEach(n => n.remove());
+    document.querySelectorAll('.placed-melody-note').forEach(n => n.remove());
+    const grid = document.getElementById('melody-lane-grid');
 
-    const gridContainer = document.getElementById('piano-roll-grid');
-    this.song.melody.forEach(note => {
-      const cell = gridContainer.querySelector(`.roll-cell[data-row="${note.row}"][data-step="${note.step}"]`);
+    this.song.melody.forEach(n => {
+      const cell = grid.querySelector(`.melody-grid-cell[data-row="${n.row}"][data-step="${n.step}"]`);
       if (!cell) return;
+      const pitchInfo = theory.rowToPitch(n.row, this.song.key, this.song.mode);
+      const dur = n.duration || 4;
+      const widthPx = dur * 11 - 2;
 
-      const pitchInfo = theory.rowToPitch(note.row, this.song.key, this.song.mode);
-      const dur = note.duration || 1;
-      const widthPx = dur * 22 - 2;
-
-      const noteEl = document.createElement('div');
-      noteEl.className = 'roll-note';
-      noteEl.style.width = `${widthPx}px`;
-      noteEl.style.backgroundColor = pitchInfo.color;
-      noteEl.textContent = pitchInfo.degreeLabel;
-      cell.appendChild(noteEl);
+      const el = document.createElement('div');
+      el.className = 'placed-melody-note';
+      el.style.width = `${widthPx}px`;
+      el.style.setProperty('--note-col', pitchInfo.color);
+      el.textContent = pitchInfo.degreeLabel;
+      cell.appendChild(el);
     });
   }
 
-  renderChordPalette(category = 'diatonic') {
-    const container = document.getElementById('palette-buttons-grid');
-    const dict = theory.CHORD_DEFINITIONS[this.song.mode] || theory.CHORD_DEFINITIONS.major;
+  renderChordLane() {
+    const container = document.getElementById('chord-blocks-container');
+    container.innerHTML = this.song.chords.map((chord, idx) => {
+      const details = theory.getChordDetails(chord.numeral, this.song.key, this.song.mode, chord.inversion || 0);
+      const widthPx = (chord.duration / 4) * 176 - 2;
+      const isSelected = idx === this.selectedChordIndex;
 
-    const chordsList = Object.keys(dict).filter(numeral => {
-      const def = dict[numeral];
-      if (category === 'diatonic') return def.type === 'diatonic';
-      if (category === 'seventh') return def.type === 'seventh';
-      if (category === 'secondary') return def.type === 'secondary';
-      if (category === 'borrowed') return def.type === 'borrowed' || def.type === 'harmonic' || def.type === 'suspension';
-      return true;
-    });
-
-    container.innerHTML = chordsList.map(numeral => {
-      const details = theory.getChordDetails(numeral, this.song.key, this.song.mode, this.selectedInversion);
       return `
-        <button class="palette-chord-btn" data-numeral="${numeral}" style="border-bottom-color: ${details.color}">
-          <span class="numeral" style="color: ${details.color}">${numeral}</span>
-          <span class="label">${details.chordName}</span>
-        </button>
-      `;
-    }).join('');
-
-    // Palette button click
-    container.querySelectorAll('.palette-chord-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const numeral = btn.dataset.numeral;
-        this.setChordAtSlot(numeral, this.selectedInversion, true);
-      });
-    });
-  }
-
-  setChordAtSlot(numeral, inversion = 0, advanceSlot = true) {
-    this.song.chords[this.selectedSlot] = {
-      numeral,
-      inversion
-    };
-
-    // Audition sound
-    const details = theory.getChordDetails(numeral, this.song.key, this.song.mode, inversion);
-    const voicing = theory.getChordVoicing(details, 3);
-    this.audio.previewNotes(voicing.all, this.audio.instrument);
-
-    if (advanceSlot) {
-      this.selectedSlot = (this.selectedSlot + 1) % (this.song.bars * 2);
-    }
-
-    this.renderChordSlots();
-    this.updateSuggestions();
-    this.saveToStorage();
-  }
-
-  updateSuggestions() {
-    const listEl = document.getElementById('suggestions-list');
-    if (!listEl) return;
-
-    // Get previous chord relative to current slot
-    const prevIndex = (this.selectedSlot - 1 + this.song.chords.length) % this.song.chords.length;
-    const prevChord = this.song.chords[prevIndex];
-    const prevNumeral = prevChord ? (typeof prevChord === 'string' ? prevChord : prevChord.numeral) : 'I';
-
-    const modeTrends = CHORD_TRENDS[this.song.mode] || CHORD_TRENDS.major;
-    const suggestions = modeTrends[prevNumeral] || modeTrends['I'] || [];
-
-    if (suggestions.length === 0) {
-      listEl.innerHTML = `<div class="suggestion-desc">Select a slot to see chord progression trends.</div>`;
-      return;
-    }
-
-    listEl.innerHTML = suggestions.slice(0, 4).map(s => {
-      const details = theory.getChordDetails(s.next, this.song.key, this.song.mode, 0);
-      return `
-        <div class="suggestion-item" data-numeral="${s.next}">
-          <div class="suggestion-left">
-            <span class="suggestion-badge" style="color: ${details.color}">${s.next}</span>
-            <span class="suggestion-desc">${s.label}</span>
-          </div>
-          <span class="suggestion-prob">${s.prob}%</span>
+        <div class="hook-chord-block ${isSelected ? 'selected' : ''}" 
+             data-index="${idx}" 
+             style="width: ${widthPx}px; --chord-col: ${details.color}">
+          <span class="block-numeral" style="color: ${details.color}">${details.fullDisplay}</span>
+          <span class="block-name">${details.fullChordName}</span>
         </div>
       `;
     }).join('');
 
-    listEl.querySelectorAll('.suggestion-item').forEach(item => {
-      item.addEventListener('click', () => {
-        this.setChordAtSlot(item.dataset.numeral, 0, true);
+    container.querySelectorAll('.hook-chord-block').forEach(b => {
+      b.addEventListener('click', () => {
+        this.selectedChordIndex = parseInt(b.dataset.index);
+        this.renderChordLane();
+        this.updateMagicPalette();
       });
+    });
+  }
+
+  renderPaletteStrip() {
+    const strip = document.getElementById('diatonic-strip');
+    const isChords = this.paletteMode === 'chords';
+
+    if (isChords) {
+      const chordsList = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'];
+      strip.innerHTML = chordsList.map(num => {
+        const details = theory.getChordDetails(num, this.song.key, this.song.mode, 0);
+        return `
+          <button class="hook-chord-btn" data-num="${num}" style="--degree-color: ${details.color}">
+            <span class="numeral" style="color: ${details.color}">${num}</span>
+            <span class="chord-name">${details.chordName}</span>
+          </button>
+        `;
+      }).join('') + `
+        <button class="hook-chord-btn" data-num="rest" style="--degree-color: #64748b">
+          <span class="numeral" style="color: #64748b">Rest</span>
+          <span class="chord-name">–</span>
+        </button>
+      `;
+
+      strip.querySelectorAll('.hook-chord-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const num = btn.dataset.num;
+          if (num === 'rest') return;
+          this.insertChord(num);
+        });
+      });
+    } else {
+      // Notes Mode (1 to 7 staircase)
+      const degrees = [1, 2, 3, 4, 5, 6, 7];
+      strip.innerHTML = degrees.map(deg => {
+        const pitchInfo = theory.rowToPitch(deg - 1, this.song.key, this.song.mode);
+        return `
+          <button class="hook-chord-btn" data-degree="${deg}" style="--degree-color: ${pitchInfo.color}">
+            <span class="numeral" style="color: ${pitchInfo.color}">${deg}</span>
+            <span class="chord-name">${pitchInfo.noteName}</span>
+          </button>
+        `;
+      }).join('');
+
+      strip.querySelectorAll('.hook-chord-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const deg = parseInt(btn.dataset.degree);
+          this.insertMelodyNote(deg - 1);
+        });
+      });
+    }
+  }
+
+  insertChord(numeral) {
+    const duration = this.selectedDurationBeats;
+    const inv = this.selectedInversion;
+
+    // Replace or insert at selected index
+    this.song.chords[this.selectedChordIndex] = {
+      numeral,
+      duration,
+      inversion: inv
+    };
+
+    // Audition sound
+    const details = theory.getChordDetails(numeral, this.song.key, this.song.mode, inv);
+    this.audio.previewNotes(theory.getChordVoicing(details, 4).all);
+
+    // Advance selection
+    if (this.selectedChordIndex + 1 < this.song.chords.length) {
+      this.selectedChordIndex += 1;
+    } else {
+      // Add new chord block
+      this.song.chords.push({ numeral: 'I', duration: 4, inversion: 0 });
+      this.selectedChordIndex = this.song.chords.length - 1;
+      this.song.bars = Math.max(this.song.bars, this.song.chords.length);
+      this.renderMeasureRuler();
+    }
+
+    this.renderChordLane();
+    this.updateMagicPalette();
+    this.saveToStorage();
+  }
+
+  insertMelodyNote(rowDegree) {
+    // Determine step from last note or start of selected chord
+    let step = 0;
+    if (this.song.melody.length > 0) {
+      const last = this.song.melody[this.song.melody.length - 1];
+      step = (last.step + (last.duration || 4)) % this.totalSteps;
+    }
+    const durSteps = Math.max(1, Math.round(this.selectedDurationBeats * 4));
+
+    this.song.melody.push({
+      row: rowDegree + 7, // default in octave 5
+      step,
+      duration: durSteps
+    });
+
+    const pitch = theory.rowToPitch(rowDegree + 7, this.song.key, this.song.mode).midi;
+    this.audio.previewNotes([pitch], 'synth');
+
+    this.renderMelodyNotes();
+    this.saveToStorage();
+  }
+
+  updateMagicPalette() {
+    const scrollBox = document.getElementById('magic-suggestions-scroll');
+    if (!scrollBox) return;
+
+    const currentChord = this.song.chords[this.selectedChordIndex] || this.song.chords[0];
+    const numeral = currentChord ? currentChord.numeral : 'I';
+
+    const modeTrends = CHORD_TRENDS[this.song.mode] || CHORD_TRENDS.major;
+    const suggestions = modeTrends[numeral] || modeTrends['I'] || [];
+
+    scrollBox.innerHTML = suggestions.map(s => {
+      const details = theory.getChordDetails(s.next, this.song.key, this.song.mode, 0);
+      return `
+        <button class="magic-chip-btn" data-num="${s.next}" style="--chip-color: ${details.color}">
+          <span class="chip-numeral" style="color: ${details.color}">${s.next}</span>
+          <span class="chip-prob">${s.prob}%</span>
+        </button>
+      `;
+    }).join('');
+
+    scrollBox.querySelectorAll('.magic-chip-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.insertChord(btn.dataset.num);
+      });
+    });
+  }
+
+  // --- Keyboard Shortcuts (1-7, Space, Arrows) ---
+  setupKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (this.isPlaying) this.stopPlayback();
+        else this.startPlayback();
+      } else if (e.key >= '1' && e.key <= '7') {
+        const num = parseInt(e.key);
+        if (this.paletteMode === 'chords') {
+          const diatonic = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'];
+          if (diatonic[num - 1]) this.insertChord(diatonic[num - 1]);
+        } else {
+          this.insertMelodyNote(num - 1);
+        }
+      } else if (e.code === 'ArrowRight') {
+        this.selectedChordIndex = Math.min(this.selectedChordIndex + 1, this.song.chords.length - 1);
+        this.renderChordLane();
+        this.updateMagicPalette();
+      } else if (e.code === 'ArrowLeft') {
+        this.selectedChordIndex = Math.max(this.selectedChordIndex - 1, 0);
+        this.renderChordLane();
+        this.updateMagicPalette();
+      } else if (e.code === 'Backspace' || e.code === 'Delete') {
+        if (this.song.chords.length > 1) {
+          this.song.chords.splice(this.selectedChordIndex, 1);
+          this.selectedChordIndex = Math.max(0, this.selectedChordIndex - 1);
+          this.renderChordLane();
+          this.updateMagicPalette();
+          this.saveToStorage();
+        }
+      }
     });
   }
 
@@ -683,25 +811,24 @@ class SongsketchApp {
     const wrapper = document.getElementById('keyboard-keys-wrapper');
     if (!wrapper) return;
 
-    // Render 2 octaves from C3 (MIDI 48) to B4 (MIDI 71)
-    const whiteNotes = [0, 2, 4, 5, 7, 9, 11]; // C, D, E, F, G, A, B
+    const whiteNotes = [0, 2, 4, 5, 7, 9, 11];
     const blackNotes = [
-      { pc: 1, leftOffset: 5.5 },  // C#
-      { pc: 3, leftOffset: 12.5 }, // D#
-      { pc: 6, leftOffset: 26.5 }, // F#
-      { pc: 8, leftOffset: 33.5 }, // G#
-      { pc: 10, leftOffset: 40.5 },// A#
-      { pc: 13, leftOffset: 55.5 },// C#5
-      { pc: 15, leftOffset: 62.5 },// D#5
-      { pc: 18, leftOffset: 76.5 },// F#5
-      { pc: 20, leftOffset: 83.5 },// G#5
-      { pc: 22, leftOffset: 90.5 } // A#5
+      { pc: 1, leftOffset: 5.5 },
+      { pc: 3, leftOffset: 12.5 },
+      { pc: 6, leftOffset: 26.5 },
+      { pc: 8, leftOffset: 33.5 },
+      { pc: 10, leftOffset: 40.5 },
+      { pc: 13, leftOffset: 55.5 },
+      { pc: 15, leftOffset: 62.5 },
+      { pc: 18, leftOffset: 76.5 },
+      { pc: 20, leftOffset: 83.5 },
+      { pc: 22, leftOffset: 90.5 }
     ];
 
     let whiteHtml = '';
     for (let oct = 3; oct <= 4; oct++) {
       whiteNotes.forEach(pc => {
-        const midi = oct * 12 + pc + 12; // C3 = 48, C4 = 60
+        const midi = oct * 12 + pc + 12;
         const noteName = theory.getNoteName(pc, false);
         whiteHtml += `
           <div class="white-key" data-midi="${midi}">
@@ -714,14 +841,11 @@ class SongsketchApp {
     let blackHtml = '';
     blackNotes.forEach(bn => {
       const midi = 48 + bn.pc;
-      blackHtml += `
-        <div class="black-key" data-midi="${midi}" style="left: ${bn.leftOffset}%"></div>
-      `;
+      blackHtml += `<div class="black-key" data-midi="${midi}" style="left: ${bn.leftOffset}%"></div>`;
     });
 
     wrapper.innerHTML = whiteHtml + blackHtml;
 
-    // Click keys to play
     wrapper.querySelectorAll('.white-key, .black-key').forEach(key => {
       key.addEventListener('mousedown', () => {
         const midi = parseInt(key.dataset.midi);
@@ -730,42 +854,8 @@ class SongsketchApp {
     });
   }
 
-  // --- Keyboard Shortcuts ---
-  setupKeyboardShortcuts() {
-    document.addEventListener('keydown', (e) => {
-      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
-
-      if (e.code === 'Space') {
-        e.preventDefault();
-        if (this.isPlaying) this.stopPlayback();
-        else this.startPlayback();
-      } else if (e.key >= '1' && e.key <= '7') {
-        const degIndex = parseInt(e.key) - 1;
-        const diatonicKeys = Object.keys(theory.CHORD_DEFINITIONS[this.song.mode] || theory.CHORD_DEFINITIONS.major)
-          .filter(k => (theory.CHORD_DEFINITIONS[this.song.mode] || theory.CHORD_DEFINITIONS.major)[k].type === 'diatonic');
-        
-        if (diatonicKeys[degIndex]) {
-          this.setChordAtSlot(diatonicKeys[degIndex], this.selectedInversion, true);
-        }
-      } else if (e.code === 'ArrowRight') {
-        this.selectedSlot = Math.min(this.selectedSlot + 1, this.song.chords.length - 1);
-        this.updateChordSlotSelection();
-        this.updateSuggestions();
-      } else if (e.code === 'ArrowLeft') {
-        this.selectedSlot = Math.max(this.selectedSlot - 1, 0);
-        this.updateChordSlotSelection();
-        this.updateSuggestions();
-      } else if (e.code === 'Backspace' || e.code === 'Delete') {
-        this.song.chords[this.selectedSlot] = null;
-        this.renderChordSlots();
-        this.saveToStorage();
-      }
-    });
-  }
-
   // --- Modals, Export & Share ---
   setupModalsAndExport() {
-    // Share Link
     document.getElementById('share-btn').addEventListener('click', async () => {
       const dataStr = btoa(encodeURIComponent(JSON.stringify(this.song)));
       const url = `${window.location.origin}${window.location.pathname}#${dataStr}`;
@@ -777,7 +867,6 @@ class SongsketchApp {
       }
     });
 
-    // Download MIDI
     document.getElementById('midi-export-btn').addEventListener('click', () => {
       const blob = theory.generateMidiFile(this.song);
       const url = URL.createObjectURL(blob);
@@ -789,7 +878,6 @@ class SongsketchApp {
       this.showToast('MIDI file downloaded!');
     });
 
-    // Download Audio WAV
     document.getElementById('wav-export-btn').addEventListener('click', async () => {
       this.showToast('Rendering studio audio WAV...');
       try {
@@ -807,7 +895,6 @@ class SongsketchApp {
       }
     });
 
-    // Project JSON Save
     document.getElementById('save-project-btn').addEventListener('click', () => {
       const jsonStr = JSON.stringify(this.song, null, 2);
       const blob = new Blob([jsonStr], { type: 'application/json' });
@@ -817,10 +904,9 @@ class SongsketchApp {
       a.download = `${this.song.title.toLowerCase().replace(/\s+/g, '-')}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      this.showToast('Project file saved!');
+      this.showToast('Project saved!');
     });
 
-    // Project JSON Load
     const fileInput = document.getElementById('project-file-input');
     document.getElementById('open-project-btn').addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', (e) => {
@@ -831,20 +917,20 @@ class SongsketchApp {
         try {
           const parsed = JSON.parse(event.target.result);
           if (parsed && parsed.chords) {
-            this.song = Object.assign(this.song, parsed);
+            this.normalizeImportedSong(parsed);
             this.renderHookpad();
             this.saveToStorage();
-            this.showToast('Project opened successfully!');
+            this.showToast('Project opened!');
           }
         } catch (err) {
-          alert('Invalid project file format.');
+          alert('Invalid project format.');
         }
       };
       reader.readAsText(file);
       fileInput.value = '';
     });
 
-    // Lead Sheet & Guitar Tabs Modal
+    // Lead Sheet & Guitar Tabs
     const leadsheetModal = document.getElementById('leadsheet-modal');
     const leadsheetContainer = document.getElementById('leadsheet-content-container');
     const btnLeadSheet = document.getElementById('leadsheet-btn');
@@ -892,16 +978,73 @@ class SongsketchApp {
     setTimeout(() => toast.classList.remove('show'), 2600);
   }
 
-  // --- TheoryTab Explorer Setup ---
+  // --- TheoryTab Explorer & Graph Setup (frame_37s.jpg) ---
   setupTheoryTab() {
     const grid = document.getElementById('theorytab-songs-grid');
     const searchInput = document.getElementById('theorytab-search');
     const genrePills = document.querySelectorAll('.genre-pill');
-    const progButtons = document.querySelectorAll('.prog-builder-btn');
-    const clearProgBtn = document.getElementById('clear-prog-filter-btn');
-    const activeFilterDisplay = document.getElementById('active-filter-sequence');
+    const graphViewport = document.getElementById('graph-viewport');
+    const graphStrip = document.getElementById('graph-sequence-strip');
+    const resetGraphBtn = document.getElementById('btn-reset-graph');
 
     let currentGenre = 'All';
+
+    const renderGraph = () => {
+      const currentChord = this.graphPath[this.graphPath.length - 1];
+      const details = theory.getChordDetails(currentChord, 0, 'major', 0);
+      const modeTrends = CHORD_TRENDS.major[currentChord] || CHORD_TRENDS.major['I'] || [];
+
+      // Render Center Node
+      let graphHtml = `
+        <div class="graph-center-node" style="--center-col: ${details.color}">
+          <span style="color: ${details.color}">${currentChord}</span>
+          <span style="font-size: 0.65rem; color: #64748b;">Current</span>
+        </div>
+      `;
+
+      // Branch nodes placed in circular orbit around center
+      const angleStep = (2 * Math.PI) / modeTrends.length;
+      const radius = 110;
+
+      modeTrends.forEach((t, i) => {
+        const branchDetails = theory.getChordDetails(t.next, 0, 'major', 0);
+        const angle = i * angleStep - Math.PI / 2;
+        const x = Math.round(radius * Math.cos(angle));
+        const y = Math.round(radius * Math.sin(angle));
+
+        graphHtml += `
+          <div class="graph-branch-node" 
+               data-chord="${t.next}" 
+               style="transform: translate(${x}px, ${y}px); --branch-col: ${branchDetails.color}">
+            <span style="color: ${branchDetails.color}">${t.next}</span>
+            <span class="branch-prob-tag">${t.prob}%</span>
+          </div>
+        `;
+      });
+
+      graphViewport.innerHTML = graphHtml;
+
+      // Update sequence strip
+      graphStrip.innerHTML = `
+        <span style="font-size: 0.78rem; color: var(--text-muted);">Active Path:</span>
+        ${this.graphPath.map(c => `<span class="seq-chip">${c}</span>`).join(' ➔ ')}
+      `;
+
+      // Branch node click
+      graphViewport.querySelectorAll('.graph-branch-node').forEach(node => {
+        node.addEventListener('click', () => {
+          this.graphPath.push(node.dataset.chord);
+          renderGraph();
+          renderSongs();
+        });
+      });
+    };
+
+    resetGraphBtn.addEventListener('click', () => {
+      this.graphPath = ['I'];
+      renderGraph();
+      renderSongs();
+    });
 
     const renderSongs = () => {
       const query = (searchInput.value || '').toLowerCase().trim();
@@ -911,29 +1054,19 @@ class SongsketchApp {
                              song.chords.join(' ').toLowerCase().includes(query);
         const matchesGenre = currentGenre === 'All' || song.genre.includes(currentGenre);
 
-        // Check if song matches chord progression filter sequence
-        let matchesProg = true;
-        if (this.activeProgressionFilter.length > 0) {
-          const songChordsStr = song.chords.join(',');
-          const filterStr = this.activeProgressionFilter.join(',');
-          matchesProg = songChordsStr.includes(filterStr);
+        // Check if song matches graph path
+        let matchesPath = true;
+        if (this.graphPath.length > 1) {
+          const songStr = song.chords.join(',');
+          const pathStr = this.graphPath.join(',');
+          matchesPath = songStr.includes(pathStr);
         }
 
-        return matchesQuery && matchesGenre && matchesProg;
+        return matchesQuery && matchesGenre && matchesPath;
       });
 
-      // Update active filter sequence UI
-      if (this.activeProgressionFilter.length === 0) {
-        activeFilterDisplay.innerHTML = `<span style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">Active progression filter: None</span>`;
-      } else {
-        activeFilterDisplay.innerHTML = `
-          <span style="font-size: 0.8rem; color: #fff; font-weight:700;">Filter:</span>
-          ${this.activeProgressionFilter.map(c => `<span class="sequence-chip">${c}</span>`).join(' ➔ ')}
-        `;
-      }
-
       if (filtered.length === 0) {
-        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">No songs found matching this progression or search query.</div>`;
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">No songs found for this progression path. Try clicking another chord or reset the tree!</div>`;
         return;
       }
 
@@ -970,23 +1103,17 @@ class SongsketchApp {
         `;
       }).join('');
 
-      // Preview Song Button
       grid.querySelectorAll('.btn-preview-song').forEach(btn => {
         btn.addEventListener('click', () => {
           const song = THEORYTAB_SONGS.find(s => s.id === btn.dataset.id);
-          if (song) {
-            this.previewTheoryTabSong(song);
-          }
+          if (song) this.previewTheoryTabSong(song);
         });
       });
 
-      // Load Song Button
       grid.querySelectorAll('.btn-load-song').forEach(btn => {
         btn.addEventListener('click', () => {
           const song = THEORYTAB_SONGS.find(s => s.id === btn.dataset.id);
-          if (song) {
-            this.loadSongIntoHookpad(song);
-          }
+          if (song) this.loadSongIntoHookpad(song);
         });
       });
     };
@@ -1002,40 +1129,29 @@ class SongsketchApp {
       });
     });
 
-    // Chord Progression Builder Buttons
-    progButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.activeProgressionFilter.push(btn.dataset.num);
-        renderSongs();
-      });
-    });
-
-    clearProgBtn.addEventListener('click', () => {
-      this.activeProgressionFilter = [];
-      renderSongs();
-    });
-
+    renderGraph();
     renderSongs();
   }
 
   loadSongIntoHookpad(tabSong) {
     this.stopPlayback();
-    this.song = {
-      title: tabSong.title,
-      key: tabSong.key,
-      mode: tabSong.mode,
-      bpm: tabSong.bpm,
-      bars: tabSong.bars,
-      loop: true,
-      chords: [...tabSong.chords],
-      melody: JSON.parse(JSON.stringify(tabSong.melody))
-    };
+    this.song.title = tabSong.title;
+    this.song.key = tabSong.key;
+    this.song.mode = tabSong.mode;
+    this.song.bpm = tabSong.bpm;
+    this.song.bars = tabSong.bars;
+    this.song.chords = tabSong.chords.map(c => ({
+      numeral: c,
+      duration: 4,
+      inversion: 0
+    }));
+    this.song.melody = JSON.parse(JSON.stringify(tabSong.melody));
 
     document.getElementById('key-select').value = this.song.key;
     document.getElementById('mode-select').value = this.song.mode;
     document.getElementById('bpm-slider').value = this.song.bpm;
     document.getElementById('bpm-display').textContent = this.song.bpm;
-    document.getElementById('bars-select').value = this.song.bars;
+    document.getElementById('song-title-display').textContent = this.song.title;
 
     this.renderHookpad();
     this.renderPianoKeyboard();
@@ -1051,137 +1167,116 @@ class SongsketchApp {
 
     song.chords.forEach((chordNumeral, i) => {
       const details = theory.getChordDetails(chordNumeral, song.key, song.mode, 0);
-      const voicing = theory.getChordVoicing(details, 3);
+      const voicing = theory.getChordVoicing(details, 4);
       const time = now + i * 4 * stepSec;
       const dur = 3.6 * stepSec;
 
-      voicing.treble.forEach(m => this.audio.playPianoNote(this.audio.ctx, this.audio.chordsGain, m, time, dur, 0.7));
-      this.audio.playBassNote(this.audio.ctx, this.audio.bassGain, 36 + details.bassPc, time, dur, 0.8);
+      voicing.treble.forEach(m => this.audio.playPianoNote(this.audio.ctx, this.audio.chordsGain, m, time, dur, 0.75));
+      this.audio.playBassNote(this.audio.ctx, this.audio.bassGain, 36 + details.bassPc, time, dur, 0.85);
     });
 
     this.showToast(`Playing preview for ${song.title}...`);
   }
 
-  // --- Chord Crush (Ear Training Game) Setup ---
+  // --- Chord Crush Game UI (frame_82s.jpg) ---
   setupChordCrush() {
-    const levelDisplay = document.getElementById('crush-level-display');
-    const streakDisplay = document.getElementById('crush-streak-display');
-    const scoreDisplay = document.getElementById('crush-score-display');
-    const levelDesc = document.getElementById('crush-level-desc');
+    const scoreVal = document.getElementById('crush-score-val');
+    const timerVal = document.getElementById('crush-timer-val');
+    const timelineTrack = document.getElementById('crush-timeline-track');
+    const choicesDeck = document.getElementById('crush-choices-deck');
     const listenBtn = document.getElementById('btn-crush-listen');
-    const slotsContainer = document.getElementById('crush-guess-slots');
-    const choicesGrid = document.getElementById('crush-choices-grid');
-    const clearBtn = document.getElementById('btn-crush-clear');
-    const submitBtn = document.getElementById('btn-crush-submit');
-    const nextBtn = document.getElementById('btn-crush-next');
-    const feedbackBanner = document.getElementById('crush-feedback-banner');
+    const feedbackToast = document.getElementById('crush-feedback-toast');
 
-    let currentGuess = [];
+    const showToastMsg = (msg, isSuccess = true) => {
+      feedbackToast.style.display = 'block';
+      feedbackToast.style.color = isSuccess ? '#10b981' : '#ef4444';
+      feedbackToast.textContent = msg;
+      setTimeout(() => { feedbackToast.style.display = 'none'; }, 1800);
+    };
 
-    const startRound = () => {
-      currentGuess = [];
-      const question = this.crushGame.startNewRound();
-      const config = this.crushGame.levelConfigs[this.crushGame.level];
+    const renderRound = () => {
+      scoreVal.textContent = this.crushGame.score;
 
-      levelDisplay.textContent = this.crushGame.level;
-      streakDisplay.textContent = `${this.crushGame.streak} 🔥`;
-      scoreDisplay.textContent = this.crushGame.score;
-      levelDesc.textContent = config.name;
+      // Render Timeline Track with completed blocks + target block
+      let trackHtml = '';
+      const totalLen = this.crushGame.currentProgression.length;
 
-      feedbackBanner.style.display = 'none';
-      submitBtn.style.display = 'inline-flex';
-      nextBtn.style.display = 'none';
+      for (let i = 0; i < totalLen; i++) {
+        const isGuessed = i < this.crushGame.guessedChords.length;
+        const isTarget = i === this.crushGame.currentStepIndex;
 
-      // Render slots
-      slotsContainer.innerHTML = Array.from({ length: config.length }, (_, i) => `
-        <div class="guess-slot" id="crush-slot-${i}">?</div>
-      `).join('');
-
-      // Auto-fill slot 0 since it is tonic (I)
-      currentGuess.push('I');
-      const slot0 = document.getElementById('crush-slot-0');
-      if (slot0) {
-        slot0.textContent = 'I';
-        slot0.classList.add('filled');
-        slot0.style.color = 'var(--deg-1)';
+        if (isGuessed) {
+          const num = this.crushGame.guessedChords[i].numeral;
+          const details = theory.getChordDetails(num, 0, 'major', 0);
+          trackHtml += `
+            <div class="crush-track-block revealed" style="--chord-col: ${details.color}">
+              <div class="crush-check-pill">✓</div>
+              <span class="numeral" style="color: ${details.color}">${num}</span>
+              <span class="chord-name">${details.chordName}</span>
+            </div>
+          `;
+        } else if (isTarget) {
+          trackHtml += `
+            <div class="crush-track-block target">
+              <div class="crush-target-indicator"></div>
+              <span class="numeral" style="color: #64748b;">?</span>
+              <span class="chord-name">Guess</span>
+            </div>
+          `;
+        } else {
+          trackHtml += `
+            <div class="crush-track-block" style="background:#f1f5f9;">
+              <span class="numeral" style="color: #cbd5e1;">–</span>
+            </div>
+          `;
+        }
       }
 
-      // Render choices buttons
-      const choices = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'];
-      choicesGrid.innerHTML = choices.map(ch => {
+      timelineTrack.innerHTML = trackHtml;
+
+      // Render 4 Choice Cards
+      const choices = this.crushGame.getChoicesForStep(this.crushGame.currentStepIndex);
+      choicesDeck.innerHTML = choices.map(ch => {
         const details = theory.getChordDetails(ch, 0, 'major', 0);
         return `
-          <button class="choice-chord-btn" data-chord="${ch}" style="border-bottom-color: ${details.color}; color: ${details.color}">
-            ${ch}
-          </button>
+          <div class="crush-choice-card" data-chord="${ch}" style="--card-col: ${details.color}">
+            <span class="choice-numeral" style="color: ${details.color}">${ch}</span>
+            <span class="choice-name">${details.chordName}</span>
+          </div>
         `;
       }).join('');
 
-      choicesGrid.querySelectorAll('.choice-chord-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          if (currentGuess.length < config.length) {
-            const ch = btn.dataset.chord;
-            const idx = currentGuess.length;
-            currentGuess.push(ch);
-            const slot = document.getElementById(`crush-slot-${idx}`);
-            if (slot) {
-              const details = theory.getChordDetails(ch, 0, 'major', 0);
-              slot.textContent = ch;
-              slot.classList.add('filled');
-              slot.style.color = details.color;
-            }
-            // Audition chord
-            const details = theory.getChordDetails(ch, 0, 'major', 0);
-            this.audio.previewNotes(theory.getChordVoicing(details, 3).all, 'piano');
+      choicesDeck.querySelectorAll('.crush-choice-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const ch = card.dataset.chord;
+          const res = this.crushGame.guessCurrentStep(ch);
+          if (!res) return;
+
+          scoreVal.textContent = res.score;
+
+          if (res.status === 'step_correct') {
+            showToastMsg(`✓ Correct! That was ${ch}!`, true);
+            renderRound();
+          } else if (res.status === 'round_complete') {
+            showToastMsg(`🎉 Progression Solved! +50 Bonus!`, true);
+            setTimeout(() => {
+              this.crushGame.startNewRound();
+              renderRound();
+              this.crushGame.playFullProgression();
+            }, 1600);
+          } else {
+            showToastMsg(`❌ Not ${ch}! Listen again...`, false);
           }
         });
       });
-
-      // Play audio prompt
-      this.crushGame.playCurrentQuestion();
     };
 
     listenBtn.addEventListener('click', () => {
-      this.crushGame.playCurrentQuestion();
+      this.crushGame.playFullProgression();
     });
 
-    clearBtn.addEventListener('click', () => {
-      currentGuess = ['I'];
-      const config = this.crushGame.levelConfigs[this.crushGame.level];
-      for (let i = 1; i < config.length; i++) {
-        const slot = document.getElementById(`crush-slot-${i}`);
-        if (slot) {
-          slot.textContent = '?';
-          slot.classList.remove('filled');
-          slot.style.color = '';
-        }
-      }
-    });
-
-    submitBtn.addEventListener('click', () => {
-      const res = this.crushGame.submitGuess(currentGuess);
-      if (!res) return;
-
-      scoreDisplay.textContent = res.score;
-      streakDisplay.textContent = `${res.streak} 🔥`;
-      levelDisplay.textContent = res.level;
-
-      if (res.isCorrect) {
-        feedbackBanner.className = 'feedback-banner correct';
-        feedbackBanner.innerHTML = `🎉 Correct! Perfect ear! The progression is <strong>${res.actual.join(' ➔ ')}</strong>. +${100 * res.level} pts`;
-      } else {
-        feedbackBanner.className = 'feedback-banner wrong';
-        feedbackBanner.innerHTML = `❌ Not quite! The actual progression was <strong>${res.actual.join(' ➔ ')}</strong>. Try the next one!`;
-      }
-
-      feedbackBanner.style.display = 'block';
-      submitBtn.style.display = 'none';
-      nextBtn.style.display = 'inline-flex';
-    });
-
-    nextBtn.addEventListener('click', startRound);
-
-    startRound();
+    this.crushGame.startNewRound();
+    renderRound();
   }
 
   // --- Trends Tab Setup ---
@@ -1194,11 +1289,6 @@ class SongsketchApp {
       const chord = chordSelect.value;
       const mode = this.song.mode;
       const trends = (CHORD_TRENDS[mode] || CHORD_TRENDS.major)[chord] || [];
-
-      if (trends.length === 0) {
-        barsContainer.innerHTML = `<p style="color:var(--text-muted)">No statistics available for ${chord}.</p>`;
-        return;
-      }
 
       barsContainer.innerHTML = trends.map(t => {
         const details = theory.getChordDetails(t.next, this.song.key, this.song.mode, 0);
@@ -1219,23 +1309,20 @@ class SongsketchApp {
     chordSelect.addEventListener('change', updateTrendsBars);
     updateTrendsBars();
 
-    // Render Famous Cadences
-    cadencesGrid.innerHTML = FAMOUS_CADENCES.map(cadence => {
-      return `
-        <div class="cadence-card">
-          <div>
-            <h4>${cadence.name}</h4>
-            <div class="cadence-formula">${cadence.formula}</div>
-            <div class="cadence-examples"><strong>Hits:</strong> ${cadence.examples}</div>
-            <p class="song-desc">${cadence.description}</p>
-          </div>
-          <div style="display: flex; gap: 8px; margin-top: 12px;">
-            <button class="btn btn-audition-cadence" data-chords="${cadence.chords.join(',')}">▶ Audition</button>
-            <button class="btn btn-primary btn-use-cadence" data-chords="${cadence.chords.join(',')}">Use in Song</button>
-          </div>
+    cadencesGrid.innerHTML = FAMOUS_CADENCES.map(cadence => `
+      <div class="cadence-card">
+        <div>
+          <h4>${cadence.name}</h4>
+          <div class="cadence-formula">${cadence.formula}</div>
+          <div class="cadence-examples"><strong>Hits:</strong> ${cadence.examples}</div>
+          <p class="song-desc">${cadence.description}</p>
         </div>
-      `;
-    }).join('');
+        <div style="display: flex; gap: 8px; margin-top: 12px;">
+          <button class="btn btn-audition-cadence" data-chords="${cadence.chords.join(',')}">▶ Audition</button>
+          <button class="btn btn-primary btn-use-cadence" data-chords="${cadence.chords.join(',')}">Use in Song</button>
+        </div>
+      </div>
+    `).join('');
 
     cadencesGrid.querySelectorAll('.btn-audition-cadence').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1260,7 +1347,7 @@ class SongsketchApp {
 
     chords.forEach((chordNumeral, i) => {
       const details = theory.getChordDetails(chordNumeral, this.song.key, this.song.mode, 0);
-      const voicing = theory.getChordVoicing(details, 3);
+      const voicing = theory.getChordVoicing(details, 4);
       const time = now + i * dur;
 
       voicing.treble.forEach(m => this.audio.playPianoNote(this.audio.ctx, this.audio.chordsGain, m, time, dur * 0.9, 0.75));

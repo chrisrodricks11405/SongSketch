@@ -32,7 +32,7 @@ export const MODES = {
   }
 };
 
-// Hooktheory standard scale-degree colors
+// Hooktheory signature scale-degree colors
 export const DEGREE_COLORS = [
   '#e74c3c', // 1: Red
   '#e67e22', // 2: Orange
@@ -44,24 +44,24 @@ export const DEGREE_COLORS = [
 ];
 
 export const CHORD_QUALITIES = {
-  '':      { name: 'Major',       intervals: [0, 4, 7],      symbol: '' },
-  'm':     { name: 'Minor',       intervals: [0, 3, 7],      symbol: 'm' },
-  'dim':   { name: 'Diminished',  intervals: [0, 3, 6],      symbol: '°' },
-  'aug':   { name: 'Augmented',   intervals: [0, 4, 8],      symbol: '+' },
-  '7':     { name: 'Dominant 7th',intervals: [0, 4, 7, 10],  symbol: '7' },
-  'maj7':  { name: 'Major 7th',   intervals: [0, 4, 7, 11],  symbol: 'maj7' },
-  'm7':    { name: 'Minor 7th',   intervals: [0, 3, 7, 10],  symbol: 'm7' },
-  'm7b5':  { name: 'Half-Dim 7th',intervals: [0, 3, 6, 10],  symbol: 'ø7' },
-  'dim7':  { name: 'Diminished 7th', intervals: [0, 3, 6, 9], symbol: '°7' },
-  'sus2':  { name: 'Suspended 2', intervals: [0, 2, 7],      symbol: 'sus2' },
-  'sus4':  { name: 'Suspended 4', intervals: [0, 5, 7],      symbol: 'sus4' },
-  'add9':  { name: 'Add 9',       intervals: [0, 4, 7, 14],  symbol: 'add9' }
+  '':      { name: 'Major',          intervals: [0, 4, 7],      symbol: '' },
+  'm':     { name: 'Minor',          intervals: [0, 3, 7],      symbol: 'm' },
+  'dim':   { name: 'Diminished',     intervals: [0, 3, 6],      symbol: '°' },
+  'aug':   { name: 'Augmented',      intervals: [0, 4, 8],      symbol: '+' },
+  '7':     { name: 'Dominant 7th',   intervals: [0, 4, 7, 10],  symbol: '7' },
+  'maj7':  { name: 'Major 7th',      intervals: [0, 4, 7, 11],  symbol: 'maj7' },
+  'm7':    { name: 'Minor 7th',      intervals: [0, 3, 7, 10],  symbol: 'm7' },
+  'm7b5':  { name: 'Half-Dim 7th',   intervals: [0, 3, 6, 10],  symbol: 'ø7' },
+  'dim7':  { name: 'Diminished 7th', intervals: [0, 3, 6, 9],   symbol: '°7' },
+  'sus2':  { name: 'Suspended 2',    intervals: [0, 2, 7],      symbol: 'sus2' },
+  'sus4':  { name: 'Suspended 4',    intervals: [0, 5, 7],      symbol: 'sus4' },
+  'add9':  { name: 'Add 9',          intervals: [0, 4, 7, 14],  symbol: 'add9' }
 };
 
 // Comprehensive chord dictionary mapped by mode
 export const CHORD_DEFINITIONS = {
   major: {
-    // Diatonic
+    // Diatonic Triads
     'I':     { offset: 0,  quality: '',     degree: 1, type: 'diatonic' },
     'ii':    { offset: 2,  quality: 'm',    degree: 2, type: 'diatonic' },
     'iii':   { offset: 4,  quality: 'm',    degree: 3, type: 'diatonic' },
@@ -87,20 +87,24 @@ export const CHORD_DEFINITIONS = {
     'bVI':   { offset: 8,  quality: '',     degree: 6, type: 'borrowed', label: 'bVI (Flat 6)' },
     'bVII':  { offset: 10, quality: '',     degree: 7, type: 'borrowed', label: 'bVII (Subtonic)' },
     'bIII':  { offset: 3,  quality: '',     degree: 3, type: 'borrowed', label: 'bIII (Flat 3)' },
-    // Suspended
+    // Suspensions
     'Isus4': { offset: 0,  quality: 'sus4', degree: 1, type: 'suspension' },
-    'Vsus4': { offset: 7,  quality: 'sus4', degree: 5, type: 'suspension' }
+    'Vsus4': { offset: 7,  quality: 'sus4', degree: 5, type: 'suspension' },
+    'Iadd9': { offset: 0,  quality: 'add9', degree: 1, type: 'extension' }
   },
   minor: {
     // Diatonic
     'i':     { offset: 0,  quality: 'm',    degree: 1, type: 'diatonic' },
     'ii°':   { offset: 2,  quality: 'dim',  degree: 2, type: 'diatonic' },
     'bIII':  { offset: 3,  quality: '',     degree: 3, type: 'diatonic' },
+    'III':   { offset: 3,  quality: '',     degree: 3, type: 'diatonic' },
     'iv':    { offset: 5,  quality: 'm',    degree: 4, type: 'diatonic' },
     'v':     { offset: 7,  quality: 'm',    degree: 5, type: 'diatonic' },
     'V':     { offset: 7,  quality: '',     degree: 5, type: 'harmonic', label: 'V (Major Dominant)' },
     'bVI':   { offset: 8,  quality: '',     degree: 6, type: 'diatonic' },
+    'VI':    { offset: 8,  quality: '',     degree: 6, type: 'diatonic' },
     'bVII':  { offset: 10, quality: '',     degree: 7, type: 'diatonic' },
+    'VII':   { offset: 10, quality: '',     degree: 7, type: 'diatonic' },
     // 7ths
     'i7':    { offset: 0,  quality: 'm7',   degree: 1, type: 'seventh' },
     'iiø7':  { offset: 2,  quality: 'm7b5', degree: 2, type: 'seventh' },
@@ -113,6 +117,27 @@ export const CHORD_DEFINITIONS = {
     'IV':    { offset: 5,  quality: '',     degree: 4, type: 'borrowed', label: 'IV (Dorian)' },
     'I':     { offset: 0,  quality: '',     degree: 1, type: 'borrowed', label: 'I (Picardy 3rd)' },
     'vii°':  { offset: 11, quality: 'dim',  degree: 7, type: 'harmonic', label: 'vii° (Leading Tone)' }
+  },
+  dorian: {
+    'i':     { offset: 0,  quality: 'm',    degree: 1, type: 'diatonic' },
+    'ii':    { offset: 2,  quality: 'm',    degree: 2, type: 'diatonic' },
+    'bIII':  { offset: 3,  quality: '',     degree: 3, type: 'diatonic' },
+    'III':   { offset: 3,  quality: '',     degree: 3, type: 'diatonic' },
+    'IV':    { offset: 5,  quality: '',     degree: 4, type: 'diatonic' },
+    'v':     { offset: 7,  quality: 'm',    degree: 5, type: 'diatonic' },
+    'vi°':   { offset: 9,  quality: 'dim',  degree: 6, type: 'diatonic' },
+    'bVII':  { offset: 10, quality: '',     degree: 7, type: 'diatonic' },
+    'VII':   { offset: 10, quality: '',     degree: 7, type: 'diatonic' }
+  },
+  mixolydian: {
+    'I':     { offset: 0,  quality: '',     degree: 1, type: 'diatonic' },
+    'ii':    { offset: 2,  quality: 'm',    degree: 2, type: 'diatonic' },
+    'iii°':  { offset: 4,  quality: 'dim',  degree: 3, type: 'diatonic' },
+    'IV':    { offset: 5,  quality: '',     degree: 4, type: 'diatonic' },
+    'v':     { offset: 7,  quality: 'm',    degree: 5, type: 'diatonic' },
+    'vi':    { offset: 9,  quality: 'm',    degree: 6, type: 'diatonic' },
+    'bVII':  { offset: 10, quality: '',     degree: 7, type: 'diatonic' },
+    'VII':   { offset: 10, quality: '',     degree: 7, type: 'diatonic' }
   }
 };
 
@@ -147,7 +172,7 @@ export function getChordDetails(numeral, keyIndex = 0, mode = 'major', inversion
   const bassPc = notes[invIndex];
   const bassName = getNoteName(bassPc, isFlatKey);
   
-  // Inversion label for Roman numeral
+  // Inversion label for Roman numeral (Hooktheory notation)
   let invSymbol = '';
   if (inversion === 1) invSymbol = def.quality.includes('7') ? '6/5' : '6';
   else if (inversion === 2) invSymbol = def.quality.includes('7') ? '4/3' : '6/4';
@@ -176,44 +201,56 @@ export function getChordDetails(numeral, keyIndex = 0, mode = 'major', inversion
 }
 
 /**
- * Gets voiced MIDI note numbers for audio playback of a chord
+ * Gets voiced MIDI note numbers for audio playback of a chord.
+ * High-quality voicing: bass in octave 2/3 (MIDI 36-50), treble in octave 4 (MIDI 60-72).
  */
-export function getChordVoicing(chordDetails, baseOctave = 3) {
-  const rootMidi = baseOctave * 12 + chordDetails.rootPc;
-  const bassMidi = (baseOctave - 1) * 12 + chordDetails.bassPc;
+export function getChordVoicing(chordDetails, baseOctave = 4) {
+  // Bass note down in octave 2/3
+  const bassMidi = 36 + chordDetails.bassPc;
   
-  // Voicing: Bass note down in octave 2, then triad/seventh notes in octave 3/4
-  const chordNotes = chordDetails.intervals.map((iv, idx) => {
+  // Voicing: Treble chord notes centered in octave 4 (MIDI 60-72)
+  const rootMidi = 60 + chordDetails.rootPc;
+  const trebleNotes = chordDetails.intervals.map((iv, idx) => {
     let note = rootMidi + iv;
-    // If inverted, ensure the bass note is properly aligned
+    // Keep voicing within a pleasant piano octave range (55 to 76)
+    while (note > 76) note -= 12;
+    while (note < 55) note += 12;
     return note;
   });
 
+  // Sort treble ascending for clean voicing
+  trebleNotes.sort((a, b) => a - b);
+
   return {
     bass: [bassMidi],
-    treble: chordNotes,
-    all: [bassMidi, ...chordNotes]
+    treble: trebleNotes,
+    all: [bassMidi, ...trebleNotes]
   };
 }
 
 /**
- * Maps a grid row index (0..14) to a MIDI pitch and scale degree info
+ * Maps a grid row index (0..14) to a MIDI pitch and scale degree info.
+ * Row 0 is Degree 1 (Tonic) in lower octave (C4 / MIDI 60).
+ * Rows ascend stepwise through the scale degrees.
  */
 export function rowToPitch(row, keyIndex = 0, mode = 'major') {
-  const scale = MODES[mode] ? MODES[mode].intervals : MODES.major.intervals;
-  const degreeIndex = row % 7;
+  const modeData = MODES[mode] || MODES.major;
+  const scale = modeData.intervals;
+  const degreeIndex = ((row % 7) + 7) % 7;
   const octaveOffset = Math.floor(row / 7);
   
-  // Base octave starts at C4 (MIDI 60)
+  // Base MIDI 60 (Middle C) + key transposition + scale interval + octave
   const baseMidi = 60 + keyIndex;
   const midi = baseMidi + scale[degreeIndex] + (octaveOffset * 12) - (keyIndex > 6 ? 12 : 0);
-  const pc = midi % 12;
+  const pc = ((midi % 12) + 12) % 12;
   const isFlatKey = FLAT_KEYS.includes(keyIndex);
+
+  const degreeNames = modeData.degreeNames || ['1', '2', '3', '4', '5', '6', '7'];
 
   return {
     midi,
     degree: degreeIndex + 1,
-    degreeLabel: (degreeIndex + 1).toString(),
+    degreeLabel: degreeNames[degreeIndex],
     noteName: getNoteName(pc, isFlatKey),
     octave: Math.floor(midi / 12) - 1,
     color: DEGREE_COLORS[degreeIndex]
@@ -224,21 +261,20 @@ export function rowToPitch(row, keyIndex = 0, mode = 'major') {
  * Generate standard Multi-Track MIDI File (Type 1)
  */
 export function generateMidiFile(song) {
-  const PPQ = 480; // Ticks per quarter note
+  const PPQ = 480;
   const ticksPer16th = PPQ / 4;
-  const mpq = Math.round(60000000 / song.bpm); // Microseconds per quarter note
+  const mpq = Math.round(60000000 / song.bpm);
 
   const tracks = [];
 
-  // Track 0: Tempo and Time Signature
+  // Track 0: Meta
   const metaTrack = [
-    0x00, 0xFF, 0x51, 0x03, (mpq >> 16) & 0xFF, (mpq >> 8) & 0xFF, mpq & 0xFF, // Tempo
-    0x00, 0xFF, 0x58, 0x04, 0x04, 0x02, 0x18, 0x08, // 4/4 Time signature
-    0x00, 0xFF, 0x2F, 0x00 // End of track
+    0x00, 0xFF, 0x51, 0x03, (mpq >> 16) & 0xFF, (mpq >> 8) & 0xFF, mpq & 0xFF,
+    0x00, 0xFF, 0x58, 0x04, 0x04, 0x02, 0x18, 0x08,
+    0x00, 0xFF, 0x2F, 0x00
   ];
   tracks.push(metaTrack);
 
-  // Helper for Variable Length Quantity (VLQ)
   function writeVLQ(value) {
     const bytes = [];
     let buffer = value & 0x7F;
@@ -255,18 +291,20 @@ export function generateMidiFile(song) {
     return bytes;
   }
 
-  // Track 1: Chords (Channel 0)
+  // Track 1: Chords
   const chordEvents = [];
   song.chords.forEach((chordData, i) => {
     if (!chordData) return;
     const numeral = typeof chordData === 'string' ? chordData : chordData.numeral;
     const inv = chordData.inversion || 0;
     const details = getChordDetails(numeral, song.key, song.mode, inv);
-    const voicing = getChordVoicing(details, 3);
+    const voicing = getChordVoicing(details, 4);
     
-    // Each chord slot is 4 steps (half note in 8-step measure) or customized
-    const startTick = i * 4 * ticksPer16th;
-    const duration = 4 * ticksPer16th - 10;
+    const startStep = chordData.startStep !== undefined ? chordData.startStep : (i * 4);
+    const durSteps = chordData.duration || 4;
+
+    const startTick = startStep * ticksPer16th;
+    const duration = durSteps * ticksPer16th - 10;
     const endTick = startTick + duration;
 
     voicing.treble.forEach(pitch => {
@@ -275,7 +313,7 @@ export function generateMidiFile(song) {
     });
   });
 
-  // Track 2: Melody (Channel 1)
+  // Track 2: Melody
   const melodyEvents = [];
   song.melody.forEach(note => {
     const pitch = rowToPitch(note.row, song.key, song.mode).midi;
@@ -287,24 +325,26 @@ export function generateMidiFile(song) {
     melodyEvents.push({ tick: endTick,   type: 0x81, note: pitch, velocity: 0 });
   });
 
-  // Track 3: Bassline (Channel 2)
+  // Track 3: Bass
   const bassEvents = [];
   song.chords.forEach((chordData, i) => {
     if (!chordData) return;
     const numeral = typeof chordData === 'string' ? chordData : chordData.numeral;
     const inv = chordData.inversion || 0;
     const details = getChordDetails(numeral, song.key, song.mode, inv);
-    const bassPitch = 36 + details.bassPc; // Low bass register
+    const bassPitch = 36 + details.bassPc;
     
-    const startTick = i * 4 * ticksPer16th;
-    const duration = 4 * ticksPer16th - 12;
+    const startStep = chordData.startStep !== undefined ? chordData.startStep : (i * 4);
+    const durSteps = chordData.duration || 4;
+
+    const startTick = startStep * ticksPer16th;
+    const duration = durSteps * ticksPer16th - 12;
     const endTick = startTick + duration;
 
     bassEvents.push({ tick: startTick, type: 0x92, note: bassPitch, velocity: 88 });
     bassEvents.push({ tick: endTick,   type: 0x82, note: bassPitch, velocity: 0 });
   });
 
-  // Build tracks from event lists
   [chordEvents, melodyEvents, bassEvents].forEach(evList => {
     evList.sort((a, b) => a.tick - b.tick);
     const bytes = [];
@@ -317,17 +357,15 @@ export function generateMidiFile(song) {
       lastTick = ev.tick;
     });
 
-    // End of track marker
     bytes.push(...writeVLQ(0), 0xFF, 0x2F, 0x00);
     tracks.push(bytes);
   });
 
-  // Assemble full Standard MIDI File format 1
   const numTracks = tracks.length;
   const header = [
-    0x4D, 0x54, 0x68, 0x64, // "MThd"
-    0x00, 0x00, 0x00, 0x06, // Header length (6)
-    0x00, 0x01,             // Format 1
+    0x4D, 0x54, 0x68, 0x64,
+    0x00, 0x00, 0x00, 0x06,
+    0x00, 0x01,
     (numTracks >> 8) & 0xFF, numTracks & 0xFF,
     (PPQ >> 8) & 0xFF, PPQ & 0xFF
   ];
@@ -336,7 +374,7 @@ export function generateMidiFile(song) {
   tracks.forEach(trackData => {
     const len = trackData.length;
     totalBytes.push(
-      0x4D, 0x54, 0x72, 0x6B, // "MTrk"
+      0x4D, 0x54, 0x72, 0x6B,
       (len >> 24) & 0xFF, (len >> 16) & 0xFF, (len >> 8) & 0xFF, len & 0xFF,
       ...trackData
     );

@@ -1,117 +1,662 @@
-/* styles/hookpad.css - Hookpad Studio DAW Styling */
+/* styles/hookpad.css - Authentic Hookpad Studio Layout matching frame_55s.jpg & frame_62s.jpg */
 
-.hookpad-container {
+.hookpad-studio-wrapper {
+  background: #ffffff;
+  border: 1px solid #d0d7e5;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 14px;
 }
 
-/* Transport Bar */
-.transport-bar {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 12px 18px;
+[data-theme="dark"] .hookpad-studio-wrapper {
+  background: #161b22;
+  border-color: #30363d;
+}
+
+/* 1. Hookpad Top Menu Bar */
+.hookpad-menubar {
+  background: #253342;
+  color: #eaeff5;
+  padding: 6px 16px;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  box-shadow: var(--shadow-sm);
+  font-size: 0.85rem;
 }
 
-.transport-group {
+.hookpad-menubar-left {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 16px;
 }
 
-.transport-label {
+.hookpad-brand-title {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-muted);
+  font-weight: 800;
+  color: #ffffff;
+  font-size: 0.95rem;
 }
 
-.transport-select,
-.transport-input {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text-main);
-  font-size: 0.9rem;
-  font-weight: 600;
-  padding: 6px 10px;
+.hookpad-menu-items {
+  display: flex;
+  gap: 12px;
+  color: #9ab0c7;
+  font-weight: 500;
+}
+
+.hookpad-menu-item {
   cursor: pointer;
-  outline: none;
+  transition: color 0.1s;
 }
 
-.transport-select:focus,
-.transport-input:focus {
-  border-color: var(--primary);
+.hookpad-menu-item:hover {
+  color: #ffffff;
 }
 
-.bpm-control {
+.hookpad-menubar-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  color: #9ab0c7;
+  font-size: 0.8rem;
 }
 
-.bpm-control input[type="range"] {
-  width: 90px;
-  accent-color: var(--primary);
+/* 2. Main Transport & Action Toolbar */
+.hookpad-toolbar {
+  background: #f1f4f9;
+  border-bottom: 1px solid #d0d7e5;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+[data-theme="dark"] .hookpad-toolbar {
+  background: #1c222d;
+  border-color: #30363d;
+}
+
+.toolbar-left-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Orange Circular Play Button */
+.hookpad-play-circle-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f97316;
+  color: #ffffff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(249, 115, 22, 0.4);
+  transition: all 0.15s ease;
+}
+
+.hookpad-play-circle-btn:hover {
+  background: #ea580c;
+  transform: scale(1.05);
+}
+
+.hookpad-play-circle-btn.playing {
+  background: #ef4444;
+}
+
+.toolbar-pill-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+
+[data-theme="dark"] .toolbar-pill-btn {
+  background: #212836;
+  border-color: #3d4659;
+  color: #e2e8f0;
+}
+
+.toolbar-pill-btn small {
+  font-size: 0.65rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.toolbar-pill-btn.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+.toolbar-pill-btn.active small {
+  color: #dbeafe;
+}
+
+/* 3. Control Palette Deck (Duration + Chords/Notes Palette + Magic Palette) */
+.hookpad-palette-deck {
+  display: grid;
+  grid-template-columns: 140px 1fr 240px;
+  border-bottom: 2px solid #d0d7e5;
+  background: #ffffff;
+}
+
+[data-theme="dark"] .hookpad-palette-deck {
+  border-color: #30363d;
+  background: #161b22;
+}
+
+@media (max-width: 1080px) {
+  .hookpad-palette-deck {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Left: Duration Selector (Vertical Bar Graph) */
+.duration-picker-box {
+  border-right: 1px solid #d0d7e5;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+[data-theme="dark"] .duration-picker-box {
+  border-color: #30363d;
+}
+
+.duration-picker-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.duration-bar-btn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+[data-theme="dark"] .duration-bar-btn {
+  background: #212836;
+  border-color: #333d4f;
+  color: #eaeff5;
+}
+
+.duration-bar-btn.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+.bar-visual {
+  height: 6px;
+  background: #94a3b8;
+  border-radius: 2px;
+}
+.duration-bar-btn.active .bar-visual {
+  background: #ffffff;
+}
+
+/* Middle: Palette Workspace */
+.palette-workspace {
+  padding: 12px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.palette-mode-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.palette-mode-pills {
+  display: flex;
+  gap: 6px;
+}
+
+.mode-tab-pill {
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid #cbd5e1;
+  background: transparent;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
   cursor: pointer;
 }
 
-.bpm-value {
-  font-family: monospace;
+.mode-tab-pill.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+/* Diatonic Chord / Melody Buttons Strip */
+.diatonic-strip {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hook-chord-btn {
+  width: 58px;
+  height: 52px;
+  border-radius: 4px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-top-width: 4px;
+  border-top-color: var(--degree-color, #2563eb);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+[data-theme="dark"] .hook-chord-btn {
+  background: #212836;
+  border-color: #333d4f;
+}
+
+.hook-chord-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+
+.hook-chord-btn .numeral {
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.hook-chord-btn .chord-name {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* Magic Palette Strip (as seen in frame_58s.jpg) */
+.magic-palette-container {
+  background: #1f2733;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #ffffff;
+}
+
+.magic-palette-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.magic-tab-active {
+  color: #60a5fa;
+  border-bottom: 2px solid #60a5fa;
+  padding-bottom: 2px;
+}
+
+.magic-suggestions-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.magic-chip-btn {
+  background: #2a3547;
+  border: 1px solid #3d4c63;
+  border-top-width: 4px;
+  border-top-color: var(--chip-color, #60a5fa);
+  border-radius: 4px;
+  padding: 4px 10px;
+  min-width: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  color: #ffffff;
+  transition: transform 0.1s;
+  flex: none;
+}
+
+.magic-chip-btn:hover {
+  transform: translateY(-2px);
+  background: #37445a;
+}
+
+.magic-chip-btn .chip-numeral {
   font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.magic-chip-btn .chip-prob {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* Right: Chord Properties Inspector */
+.hookpad-properties-inspector {
+  border-left: 1px solid #d0d7e5;
+  padding: 12px 14px;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+[data-theme="dark"] .hookpad-properties-inspector {
+  border-color: #30363d;
+  background: #1a202c;
+}
+
+.inspector-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.inspector-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.inspector-label {
+  font-size: 0.75rem;
   font-weight: 700;
-  min-width: 32px;
+  color: #475569;
 }
 
-.play-btn {
-  min-width: 110px;
-  height: 38px;
-  font-size: 1rem;
+.inspector-pills-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.prop-pill {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 0.75rem;
   font-weight: 700;
+  cursor: pointer;
 }
 
-.play-btn.playing {
-  background: var(--danger);
-  border-color: var(--danger);
+[data-theme="dark"] .prop-pill {
+  background: #252d3d;
+  border-color: #3b4559;
+  color: #e2e8f0;
 }
 
-/* Studio Workspace & Roll */
-.studio-workspace {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
+.prop-pill.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
 }
 
-.timeline-scroll-wrapper {
+/* 4. Timeline Workspace (Rainbow Scale-Degree Lanes) */
+.hookpad-timeline-container {
   overflow-x: auto;
   position: relative;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg-surface);
+  background: #ffffff;
   user-select: none;
+  min-height: 380px;
 }
 
-.timeline-content {
+[data-theme="dark"] .hookpad-timeline-container {
+  background: #11151c;
+}
+
+.hookpad-timeline-inner {
   position: relative;
   width: max-content;
   min-width: 100%;
 }
 
-/* Playhead */
-.playhead-cursor {
+/* Measure Ruler */
+.hookpad-measure-ruler {
+  display: flex;
+  height: 26px;
+  background: #e2e8f0;
+  border-bottom: 1px solid #cbd5e1;
+  margin-left: 64px;
+}
+
+[data-theme="dark"] .hookpad-measure-ruler {
+  background: #1e2633;
+  border-color: #303a4c;
+}
+
+.ruler-measure-cell {
+  width: 176px; /* 16 steps * 11px */
+  border-right: 2px solid #94a3b8;
+  display: flex;
+  align-items: center;
+  padding-left: 6px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #475569;
+}
+
+[data-theme="dark"] .ruler-measure-cell {
+  color: #94a3b8;
+}
+
+/* Melody Piano Roll with Hooktheory Rainbow Lane Stripes */
+.hookpad-melody-roll {
+  display: flex;
+  position: relative;
+  border-bottom: 2px solid #64748b;
+}
+
+.hookpad-row-headers {
+  width: 64px;
+  flex: none;
+  background: #f8fafc;
+  border-right: 2px solid #cbd5e1;
+  z-index: 10;
+}
+
+[data-theme="dark"] .hookpad-row-headers {
+  background: #161b22;
+  border-color: #30363d;
+}
+
+.row-header-badge-cell {
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.melody-lane-grid {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.melody-grid-row {
+  display: flex;
+  height: 20px;
+  /* Authentic Hooktheory subtle scale-degree background color */
+  background: var(--lane-tint, #ffffff);
+}
+
+.melody-grid-cell {
+  width: 22px;
+  height: 20px;
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  position: relative;
+}
+
+[data-theme="dark"] .melody-grid-cell {
+  border-right: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.melody-grid-cell.bar-boundary {
+  border-right: 2px solid #64748b;
+}
+
+.melody-grid-cell.beat-boundary {
+  border-right: 1px dashed rgba(0,0,0,0.25);
+}
+
+[data-theme="dark"] .melody-grid-cell.beat-boundary {
+  border-right-color: rgba(255,255,255,0.15);
+}
+
+/* Placed Melody Note */
+.placed-melody-note {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  left: 1px;
+  border-radius: 4px;
+  background: var(--note-col, #2563eb);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* 5. Chord Lane (Immediately below Melody) */
+.hookpad-chord-lane {
+  display: flex;
+  height: 68px;
+  background: #f8fafc;
+  border-bottom: 2px solid #cbd5e1;
+}
+
+[data-theme="dark"] .hookpad-chord-lane {
+  background: #161b22;
+  border-color: #30363d;
+}
+
+.chord-lane-header {
+  width: 64px;
+  flex: none;
+  background: #e2e8f0;
+  border-right: 2px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+[data-theme="dark"] .chord-lane-header {
+  background: #1e2633;
+  border-color: #30363d;
+}
+
+.chord-blocks-container {
+  display: flex;
+  flex: 1;
+}
+
+.hook-chord-block {
+  height: 100%;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-top-width: 5px;
+  border-top-color: var(--chord-col, #94a3b8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.1s;
+}
+
+[data-theme="dark"] .hook-chord-block {
+  background: #212836;
+  border-color: #333d4f;
+}
+
+.hook-chord-block:hover {
+  background: #f1f5f9;
+}
+
+.hook-chord-block.selected {
+  outline: 3px solid #2563eb;
+  outline-offset: -2px;
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.hook-chord-block.playing {
+  background: rgba(37, 99, 235, 0.22) !important;
+}
+
+.hook-chord-block .block-numeral {
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.hook-chord-block .block-name {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+/* Playhead Indicator */
+.hookpad-playhead {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -123,7 +668,7 @@
   display: none;
 }
 
-.playhead-cursor::before {
+.hookpad-playhead::before {
   content: '';
   position: absolute;
   top: 0;
@@ -131,415 +676,4 @@
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
   border-top: 8px solid #ff3366;
-}
-
-/* Chord Lane */
-.chord-lane {
-  display: flex;
-  height: 64px;
-  background: var(--bg-card);
-  border-bottom: 2px solid var(--border);
-}
-
-.lane-header {
-  width: 72px;
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-muted);
-  border-right: 2px solid var(--border);
-  background: var(--bg-surface);
-}
-
-.chord-slots-container {
-  display: flex;
-  flex: 1;
-}
-
-.chord-slot {
-  width: 88px; /* 4 steps * 22px */
-  height: 100%;
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  position: relative;
-  transition: background 0.1s ease;
-  border-top: 4px solid transparent;
-}
-
-.chord-slot:hover {
-  background: var(--bg-hover);
-}
-
-.chord-slot.selected {
-  background: rgba(37, 99, 235, 0.12);
-  outline: 2px solid var(--primary);
-  outline-offset: -2px;
-}
-
-.chord-slot.active-playback {
-  background: rgba(37, 99, 235, 0.25) !important;
-}
-
-.chord-slot .numeral {
-  font-size: 1.15rem;
-  font-weight: 800;
-  line-height: 1.1;
-}
-
-.chord-slot .chord-name {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.chord-slot.empty .numeral {
-  color: var(--text-dim);
-  font-weight: 400;
-}
-
-/* Piano Roll Melody Grid */
-.piano-roll-container {
-  display: flex;
-  position: relative;
-}
-
-.piano-roll-labels {
-  width: 72px;
-  flex: none;
-  background: var(--bg-card);
-  border-right: 2px solid var(--border);
-  z-index: 10;
-}
-
-.degree-label-cell {
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 8px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-}
-
-.degree-label-cell:hover {
-  background: var(--bg-hover);
-}
-
-.degree-badge {
-  width: 18px;
-  height: 16px;
-  border-radius: 3px;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7rem;
-}
-
-.roll-note-name {
-  color: var(--text-muted);
-  font-size: 0.7rem;
-}
-
-.piano-roll-grid {
-  display: flex;
-  flex-direction: column;
-}
-
-.roll-row {
-  display: flex;
-  height: 22px;
-}
-
-.roll-cell {
-  width: 22px;
-  height: 22px;
-  border-right: 1px solid rgba(0, 0, 0, 0.06);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  cursor: pointer;
-  position: relative;
-}
-
-[data-theme="dark"] .roll-cell {
-  border-right: 1px solid rgba(255, 255, 255, 0.04);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.roll-cell.beat-bar {
-  border-right: 2px solid var(--border);
-}
-
-.roll-cell.half-beat {
-  border-right: 1px dashed var(--border);
-}
-
-.roll-cell.tonic-row {
-  background: rgba(231, 76, 60, 0.06);
-}
-
-.roll-cell:hover {
-  background: rgba(37, 99, 235, 0.2);
-}
-
-/* Placed Melody Note */
-.roll-note {
-  position: absolute;
-  top: 1px;
-  bottom: 1px;
-  left: 1px;
-  border-radius: 4px;
-  z-index: 20;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7rem;
-  font-weight: 800;
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-  pointer-events: none;
-}
-
-/* Palette & Controls Section */
-.bottom-controls-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 16px;
-}
-
-@media (max-width: 960px) {
-  .bottom-controls-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.chord-palette-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  box-shadow: var(--shadow-sm);
-}
-
-.palette-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.palette-tabs {
-  display: flex;
-  gap: 4px;
-}
-
-.palette-tab-btn {
-  background: transparent;
-  border: none;
-  padding: 4px 10px;
-  border-radius: var(--radius);
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-
-.palette-tab-btn.active {
-  background: var(--bg-surface);
-  color: var(--text-main);
-}
-
-.palette-buttons-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.palette-chord-btn {
-  min-width: 62px;
-  height: 52px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  border-bottom-width: 4px;
-  background: var(--bg-card);
-  color: var(--text-main);
-  cursor: pointer;
-  transition: all 0.1s ease;
-}
-
-.palette-chord-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-}
-
-.palette-chord-btn .numeral {
-  font-size: 1.05rem;
-  font-weight: 800;
-}
-
-.palette-chord-btn .label {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
-
-/* Inversion & Duration Sub-controls */
-.modifier-row {
-  display: flex;
-  gap: 12px;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.modifier-group {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.modifier-title {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  margin-right: 4px;
-}
-
-.btn-pill {
-  padding: 4px 10px;
-  font-size: 0.8rem;
-  border-radius: 20px;
-}
-
-.btn-pill.active {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: #fff;
-}
-
-/* Smart Suggestions Card */
-.suggestions-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  box-shadow: var(--shadow-sm);
-  display: flex;
-  flex-direction: column;
-}
-
-.suggestions-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 10px;
-  flex: 1;
-}
-
-.suggestion-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  border-radius: var(--radius);
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.suggestion-item:hover {
-  background: var(--bg-hover);
-  border-color: var(--primary);
-}
-
-.suggestion-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.suggestion-badge {
-  font-size: 0.95rem;
-  font-weight: 800;
-}
-
-.suggestion-desc {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.suggestion-prob {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--primary);
-}
-
-/* Piano Keyboard Display */
-.piano-keyboard-widget {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 14px;
-  margin-top: 14px;
-}
-
-.keyboard-keys-wrapper {
-  display: flex;
-  position: relative;
-  height: 90px;
-  user-select: none;
-}
-
-.white-key {
-  flex: 1;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 0 0 5px 5px;
-  position: relative;
-  cursor: pointer;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 6px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #64748b;
-  transition: background 0.1s;
-}
-
-.white-key.active {
-  background: #ffcc00 !important;
-  color: #000;
-}
-
-.black-key {
-  position: absolute;
-  width: 28px;
-  height: 56px;
-  background: #1e293b;
-  border-radius: 0 0 4px 4px;
-  z-index: 2;
-  cursor: pointer;
-  transition: background 0.1s;
-}
-
-.black-key.active {
-  background: #ff9900 !important;
 }

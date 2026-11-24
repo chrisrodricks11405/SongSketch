@@ -1,4 +1,4 @@
-// js/chordcrush.js - Chord Crush Interactive Ear Training Game (Featured in Hooktheory)
+// js/chordcrush.js - Chord Crush Ear Training Game matching Hooktheory (frame_82s.jpg)
 
 export class ChordCrushGame {
   constructor(audioEngine, theoryEngine) {
@@ -6,105 +6,150 @@ export class ChordCrushGame {
     this.theory = theoryEngine;
 
     this.level = 1;
-    this.score = 0;
-    this.streak = 0;
-    this.bestStreak = 0;
+    this.score = 350;
+    this.streak = 3;
     this.key = 0; // C
     this.mode = 'major';
+    this.timerSeconds = 15;
+    this.timerInterval = null;
 
-    this.currentQuestion = null;
-    this.userAnswers = [];
-    this.hasAnswered = false;
-
-    // Difficulty levels
-    this.levelConfigs = {
-      1: { name: 'Level 1: The Two Giants', chords: ['I', 'V'], length: 2, desc: 'Learn to distinguish between the Tonic (I) and Dominant (V)' },
-      2: { name: 'Level 2: The Primary Triads', chords: ['I', 'IV', 'V'], length: 4, desc: 'Master the three fundamental major chords: I, IV, and V' },
-      3: { name: 'Level 3: The Pop Four', chords: ['I', 'IV', 'V', 'vi'], length: 4, desc: 'Recognize the ubiquitous Pop Axis chords including relative minor (vi)' },
-      4: { name: 'Level 4: All Diatonic', chords: ['I', 'ii', 'iii', 'IV', 'V', 'vi'], length: 4, desc: 'Identify all major and minor triads in the key' },
-      5: { name: 'Level 5: Master Cadences', chords: ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°', 'V7'], length: 4, desc: 'Full diatonic set with dominant 7th tension' }
-    };
+    this.currentProgression = []; // array of Roman numerals e.g. ['vi', 'IV', 'I', 'V']
+    this.currentStepIndex = 1; // 0 is known, guessing 1..length-1
+    this.guessedChords = []; // { numeral, correct: boolean }
+    this.isRoundOver = false;
   }
 
   startNewRound() {
-    this.hasAnswered = false;
-    this.userAnswers = [];
-    const config = this.levelConfigs[this.level] || this.levelConfigs[1];
+    this.isRoundOver = false;
+    clearInterval(this.timerInterval);
+    this.timerSeconds = 15;
 
-    // Pick random sequence of chords
-    const progression = [];
-    progression.push('I'); // Always start on home tonic for ear reference
-    for (let i = 1; i < config.length; i++) {
-      const pool = config.chords;
-      const pick = pool[Math.floor(Math.random() * pool.length)];
-      progression.push(pick);
-    }
-
-    this.currentQuestion = {
-      progression,
-      key: this.key,
-      mode: this.mode
+    // Difficulty pools
+    const pools = {
+      1: ['I', 'IV', 'V', 'vi'],
+      2: ['I', 'ii', 'IV', 'V', 'vi'],
+      3: ['I', 'ii', 'iii', 'IV', 'V', 'vi'],
+      4: ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'],
+      5: ['I', 'IV', 'V', 'vi', 'iv', 'bVI', 'bVII']
     };
 
-    return this.currentQuestion;
+    const pool = pools[this.level] || pools[1];
+
+    // Pick famous cadence or random 4-chord progression
+    const cadences = [
+      ['I', 'V', 'vi', 'IV'],
+      ['vi', 'IV', 'I', 'V'],
+      ['I', 'IV', 'V', 'I'],
+      ['I', 'vi', 'IV', 'V'],
+      ['ii', 'V', 'I', 'vi'],
+      ['I', 'V', 'IV', 'V']
+    ];
+
+    const pick = cadences[Math.floor(Math.random() * cadences.length)];
+    this.currentProgression = [...pick];
+    
+    // First chord is revealed
+    this.guessedChords = [{
+      numeral: this.currentProgression[0],
+      correct: true
+    }];
+    this.currentStepIndex = 1;
+
+    return {
+      progression: this.currentProgression,
+      guessedChords: this.guessedChords,
+      currentStepIndex: this.currentStepIndex,
+      choices: this.getChoicesForStep(this.currentStepIndex)
+    };
   }
 
-  playCurrentQuestion() {
-    if (!this.currentQuestion) return;
+  getChoicesForStep(stepIndex) {
+    const correct = this.currentProgression[stepIndex];
+    const pool = ['I', 'IV', 'V', 'vi', 'ii', 'iii'];
+    const choices = new Set([correct]);
+
+    while (choices.size < 4) {
+      const randomPick = pool[Math.floor(Math.random() * pool.length)];
+      choices.add(randomPick);
+    }
+
+    return Array.from(choices).sort();
+  }
+
+  playFullProgression() {
     this.audio.resume();
-    const chords = this.currentQuestion.progression;
     const now = this.audio.ctx.currentTime + 0.05;
-    const stepDur = 0.85;
+    const dur = 0.9;
 
-    chords.forEach((numeral, idx) => {
+    this.currentProgression.forEach((numeral, i) => {
       const details = this.theory.getChordDetails(numeral, this.key, this.mode, 0);
-      const voicing = this.theory.getChordVoicing(details, 3);
-      const time = now + idx * stepDur;
+      const voicing = this.theory.getChordVoicing(details, 4);
+      const time = now + i * dur;
 
-      voicing.treble.forEach(pitch => {
-        this.audio.playPianoNote(this.audio.ctx, this.audio.chordsGain, pitch, time, stepDur * 0.9, 0.75);
-      });
-      this.audio.playBassNote(this.audio.ctx, this.audio.bassGain, 36 + details.bassPc, time, stepDur * 0.9, 0.85);
+      voicing.treble.forEach(p => this.audio.playPianoNote(this.audio.ctx, this.audio.chordsGain, p, time, dur * 0.9, 0.75));
+      this.audio.playBassNote(this.audio.ctx, this.audio.bassGain, 36 + details.bassPc, time, dur * 0.9, 0.85);
     });
   }
 
-  submitGuess(chordArray) {
-    if (!this.currentQuestion || this.hasAnswered) return null;
-    this.hasAnswered = true;
+  playSingleChord(numeral) {
+    this.audio.resume();
+    const details = this.theory.getChordDetails(numeral, this.key, this.mode, 0);
+    const voicing = this.theory.getChordVoicing(details, 4);
+    const now = this.audio.ctx.currentTime + 0.05;
+    const dur = 1.0;
 
-    const actual = this.currentQuestion.progression;
-    let isCorrect = true;
-    if (chordArray.length !== actual.length) {
-      isCorrect = false;
-    } else {
-      for (let i = 0; i < actual.length; i++) {
-        if (chordArray[i] !== actual[i]) {
-          isCorrect = false;
-          break;
-        }
-      }
-    }
+    voicing.treble.forEach(p => this.audio.playPianoNote(this.audio.ctx, this.audio.chordsGain, p, now, dur, 0.75));
+    this.audio.playBassNote(this.audio.ctx, this.audio.bassGain, 36 + details.bassPc, now, dur, 0.85);
+  }
+
+  guessCurrentStep(numeral) {
+    if (this.isRoundOver) return null;
+
+    const actual = this.currentProgression[this.currentStepIndex];
+    const isCorrect = numeral === actual;
+
+    this.playSingleChord(numeral);
 
     if (isCorrect) {
-      this.score += 100 * this.level;
+      this.guessedChords.push({ numeral, correct: true });
+      this.score += 25 * this.level;
       this.streak += 1;
-      if (this.streak > this.bestStreak) this.bestStreak = this.streak;
 
-      // Level up every 3 consecutive correct streaks
-      if (this.streak % 3 === 0 && this.level < 5) {
-        this.level += 1;
+      if (this.currentStepIndex + 1 < this.currentProgression.length) {
+        this.currentStepIndex += 1;
+        return {
+          status: 'step_correct',
+          numeral,
+          stepIndex: this.currentStepIndex,
+          choices: this.getChoicesForStep(this.currentStepIndex),
+          guessedChords: this.guessedChords,
+          score: this.score,
+          streak: this.streak
+        };
+      } else {
+        this.isRoundOver = true;
+        this.score += 50 * this.level;
+        if (this.streak >= 5 && this.level < 5) this.level += 1;
+        return {
+          status: 'round_complete',
+          numeral,
+          guessedChords: this.guessedChords,
+          score: this.score,
+          streak: this.streak,
+          level: this.level
+        };
       }
     } else {
       this.streak = 0;
+      return {
+        status: 'wrong',
+        numeral,
+        actual,
+        stepIndex: this.currentStepIndex,
+        guessedChords: this.guessedChords,
+        score: this.score,
+        streak: this.streak
+      };
     }
-
-    return {
-      isCorrect,
-      actual,
-      guess: chordArray,
-      score: this.score,
-      streak: this.streak,
-      level: this.level
-    };
   }
 }
