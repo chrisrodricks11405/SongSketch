@@ -157,7 +157,7 @@ class SongsketchApp {
 
   updateThemeIcon(theme) {
     const icon = document.getElementById('theme-icon');
-    if (icon) icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+    if (icon) icon.textContent = theme === 'dark' ? 'Light' : 'Dark';
   }
 
   // --- Tab Navigation ---
@@ -292,7 +292,7 @@ class SongsketchApp {
     await this.audio.resume();
     this.isPlaying = true;
     const playBtn = document.getElementById('play-btn');
-    playBtn.textContent = '⏹';
+    playBtn.textContent = 'Stop';
     playBtn.classList.add('playing');
 
     const playhead = document.getElementById('hookpad-playhead');
@@ -313,7 +313,7 @@ class SongsketchApp {
 
     const playBtn = document.getElementById('play-btn');
     if (playBtn) {
-      playBtn.textContent = '▶';
+      playBtn.textContent = 'Play';
       playBtn.classList.remove('playing');
     }
 
@@ -343,11 +343,7 @@ class SongsketchApp {
       const durSec = durSteps * stepSec;
 
       voicing.treble.forEach(p => {
-        if (this.audio.instrument === 'piano') this.audio.playPianoNote(this.audio.ctx, this.audio.chordsGain, p, chordTime, durSec, 0.75);
-        else if (this.audio.instrument === 'rhodes') this.audio.playRhodesNote(this.audio.ctx, this.audio.chordsGain, p, chordTime, durSec, 0.75);
-        else if (this.audio.instrument === 'guitar') this.audio.playGuitarNote(this.audio.ctx, this.audio.chordsGain, p, chordTime, durSec, 0.75);
-        else if (this.audio.instrument === 'strings') this.audio.playStringsNote(this.audio.ctx, this.audio.chordsGain, p, chordTime, durSec, 0.7);
-        else this.audio.playSynthLeadNote(this.audio.ctx, this.audio.chordsGain, p, chordTime, durSec, 0.65);
+        this.audio.playChordTone(this.audio.ctx, this.audio.chordsGain, p, chordTime, durSec, 0.82);
       });
 
       this.audio.playBassNote(this.audio.ctx, this.audio.bassGain, 36 + details.bassPc, chordTime, durSec, 0.85);
@@ -359,7 +355,11 @@ class SongsketchApp {
       const pitch = theory.rowToPitch(note.row, this.song.key, this.song.mode).midi;
       const noteTime = startTime + note.step * stepSec;
       const durSec = (note.duration || 4) * stepSec;
-      this.audio.playSynthLeadNote(this.audio.ctx, this.audio.melodyGain, pitch, noteTime, durSec, 0.85);
+      if (this.audio.melodyInstrument === 'grand_piano') {
+        this.audio.playGrandPianoNote(this.audio.ctx, this.audio.melodyGain, pitch, noteTime, durSec, 0.88);
+      } else {
+        this.audio.playSynthLeadNote(this.audio.ctx, this.audio.melodyGain, pitch, noteTime, durSec, 0.85);
+      }
     });
 
     // Schedule Drums & Metronome
@@ -849,7 +849,7 @@ class SongsketchApp {
     wrapper.querySelectorAll('.white-key, .black-key').forEach(key => {
       key.addEventListener('mousedown', () => {
         const midi = parseInt(key.dataset.midi);
-        this.audio.previewNotes([midi], 'piano');
+        this.audio.previewNotes([midi], 'grand_piano');
       });
     });
   }
@@ -1027,7 +1027,7 @@ class SongsketchApp {
       // Update sequence strip
       graphStrip.innerHTML = `
         <span style="font-size: 0.78rem; color: var(--text-muted);">Active Path:</span>
-        ${this.graphPath.map(c => `<span class="seq-chip">${c}</span>`).join(' ➔ ')}
+        ${this.graphPath.map(c => `<span class="seq-chip">${c}</span>`).join(' → ')}
       `;
 
       // Branch node click
@@ -1096,8 +1096,8 @@ class SongsketchApp {
             </div>
 
             <div class="song-actions">
-              <button class="btn btn-preview-song" data-id="${song.id}">🎧 Listen</button>
-              <button class="btn btn-primary btn-load-song" data-id="${song.id}">Open in Hookpad</button>
+              <button class="btn btn-preview-song" data-id="${song.id}">Preview</button>
+              <button class="btn btn-primary btn-load-song" data-id="${song.id}">Open in Studio</button>
             </div>
           </div>
         `;
@@ -1171,7 +1171,7 @@ class SongsketchApp {
       const time = now + i * 4 * stepSec;
       const dur = 3.6 * stepSec;
 
-      voicing.treble.forEach(m => this.audio.playPianoNote(this.audio.ctx, this.audio.chordsGain, m, time, dur, 0.75));
+      voicing.treble.forEach(m => this.audio.playGrandPianoNote(this.audio.ctx, this.audio.chordsGain, m, time, dur, 0.82));
       this.audio.playBassNote(this.audio.ctx, this.audio.bassGain, 36 + details.bassPc, time, dur, 0.85);
     });
 
@@ -1255,17 +1255,17 @@ class SongsketchApp {
           scoreVal.textContent = res.score;
 
           if (res.status === 'step_correct') {
-            showToastMsg(`✓ Correct! That was ${ch}!`, true);
+            showToastMsg(`Correct: ${ch}`, true);
             renderRound();
           } else if (res.status === 'round_complete') {
-            showToastMsg(`🎉 Progression Solved! +50 Bonus!`, true);
+            showToastMsg(`Progression complete. +50 bonus points.`, true);
             setTimeout(() => {
               this.crushGame.startNewRound();
               renderRound();
               this.crushGame.playFullProgression();
             }, 1600);
           } else {
-            showToastMsg(`❌ Not ${ch}! Listen again...`, false);
+            showToastMsg(`Incorrect chord (${ch}). Listen again.`, false);
           }
         });
       });
@@ -1350,7 +1350,7 @@ class SongsketchApp {
       const voicing = theory.getChordVoicing(details, 4);
       const time = now + i * dur;
 
-      voicing.treble.forEach(m => this.audio.playPianoNote(this.audio.ctx, this.audio.chordsGain, m, time, dur * 0.9, 0.75));
+      voicing.treble.forEach(m => this.audio.playGrandPianoNote(this.audio.ctx, this.audio.chordsGain, m, time, dur * 0.9, 0.82));
       this.audio.playBassNote(this.audio.ctx, this.audio.bassGain, 36 + details.bassPc, time, dur * 0.9, 0.85);
     });
   }
@@ -1374,9 +1374,9 @@ class SongsketchApp {
         <h2>${lesson.title}</h2>
         <div class="subtitle">${lesson.subtitle}</div>
         <div class="lesson-body">${lesson.content}</div>
-        <div class="lesson-tip-box">💡 <strong>Pro Tip:</strong> ${lesson.tip}</div>
+        <div class="lesson-tip-box"><strong>Theory Note:</strong> ${lesson.tip}</div>
         <div class="lesson-action-row">
-          <button class="btn btn-primary" id="btn-play-lesson-demo">▶ Listen to Lesson Example</button>
+          <button class="btn btn-primary" id="btn-play-lesson-demo">Play Lesson Example</button>
         </div>
       `;
 

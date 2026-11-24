@@ -1,4 +1,5 @@
-// js/audio.js - High-Fidelity Web Audio API Sound Engine (Piano, Rhodes, Guitar, Synth, Strings, Drums)
+// js/audio.js - High-Precision Web Audio Acoustic Modeling Engine
+// Flagship: Concert Grand Piano with dual-detuned string unisons, hammer strike transient, and soundboard resonance
 
 export class AudioEngine {
   constructor() {
@@ -10,13 +11,13 @@ export class AudioEngine {
     this.drumsGain = null;
     this.metronomeGain = null;
 
-    this.instrument = 'piano'; // piano, rhodes, guitar, synth, strings
-    this.melodyInstrument = 'synth'; // synth, piano, flute
+    this.instrument = 'grand_piano'; // grand_piano, rhodes, guitar, synth_lead, strings
+    this.melodyInstrument = 'grand_piano';
     this.drumStyle = 'pop'; // pop, hiphop, ballad, none
     this.metronomeEnabled = false;
 
     this.isPlaying = false;
-    this.schedulerTimer = null;
+    this.playbackTimer = null;
   }
 
   init() {
@@ -25,28 +26,28 @@ export class AudioEngine {
     this.ctx = new AudioContextClass();
 
     this.masterGain = this.ctx.createGain();
-    this.masterGain.gain.setValueAtTime(0.75, this.ctx.currentTime);
+    this.masterGain.gain.setValueAtTime(0.8, this.ctx.currentTime);
     this.masterGain.connect(this.ctx.destination);
 
     // Channel mixer gains
     this.chordsGain = this.ctx.createGain();
-    this.chordsGain.gain.value = 0.75;
+    this.chordsGain.gain.value = 0.78;
     this.chordsGain.connect(this.masterGain);
 
     this.melodyGain = this.ctx.createGain();
-    this.melodyGain.gain.value = 0.85;
+    this.melodyGain.gain.value = 0.88;
     this.melodyGain.connect(this.masterGain);
 
     this.bassGain = this.ctx.createGain();
-    this.bassGain.gain.value = 0.8;
+    this.bassGain.gain.value = 0.82;
     this.bassGain.connect(this.masterGain);
 
     this.drumsGain = this.ctx.createGain();
-    this.drumsGain.gain.value = 0.55;
+    this.drumsGain.gain.value = 0.5;
     this.drumsGain.connect(this.masterGain);
 
     this.metronomeGain = this.ctx.createGain();
-    this.metronomeGain.gain.value = 0.45;
+    this.metronomeGain.gain.value = 0.4;
     this.metronomeGain.connect(this.masterGain);
 
     return this.ctx;
@@ -63,43 +64,115 @@ export class AudioEngine {
     return 440 * Math.pow(2, (midi - 69) / 12);
   }
 
-  // --- Instrument Synthesis Voices ---
-
-  playPianoNote(ctx, dest, midi, time, duration, velocity = 0.8) {
+  // ==========================================
+  // CONCERT GRAND PIANO SYNTHESIS
+  // Physical model: Hammer strike + 3 string unisons with slight detuning + soundboard body resonance
+  // ==========================================
+  playGrandPianoNote(ctx, dest, midi, time, duration, velocity = 0.85) {
     const freq = this.midiToFreq(midi);
-    const osc1 = ctx.createOscillator();
-    const osc2 = ctx.createOscillator();
-    const filter = ctx.createBiquadFilter();
-    const gain = ctx.createGain();
 
-    osc1.type = 'triangle';
-    osc1.frequency.setValueAtTime(freq, time);
+    // String unison 1: Fundamental (triangle wave for body warmth)
+    const string1 = ctx.createOscillator();
+    string1.type = 'triangle';
+    string1.frequency.setValueAtTime(freq, time);
 
-    osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(freq * 2, time);
-    osc2.detune.setValueAtTime(2.5, time);
+    // String unison 2: Slightly sharp (+1.8 cents, sine) to model authentic string chorus
+    const string2 = ctx.createOscillator();
+    string2.type = 'sine';
+    string2.frequency.setValueAtTime(freq, time);
+    string2.detune.setValueAtTime(1.8, time);
 
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(Math.min(freq * 5.0, 10000), time);
-    filter.frequency.exponentialRampToValueAtTime(Math.min(freq * 1.8, 4000), time + duration);
+    // String unison 3: 2nd harmonic overtone (+3.2 cents)
+    const string3 = ctx.createOscillator();
+    string3.type = 'sine';
+    string3.frequency.setValueAtTime(freq * 2, time);
+    string3.detune.setValueAtTime(3.2, time);
 
-    const peak = velocity * 0.32;
-    gain.gain.setValueAtTime(0.0001, time);
-    gain.gain.linearRampToValueAtTime(peak, time + 0.006);
-    gain.gain.exponentialRampToValueAtTime(peak * 0.45, time + 0.18);
-    gain.gain.exponentialRampToValueAtTime(0.0001, time + duration + 0.15);
+    // Hammer impact transient: White noise burst shaped by bandpass filter
+    const hammerBuffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.035), ctx.sampleRate);
+    const hammerData = hammerBuffer.getChannelData(0);
+    for (let i = 0; i < hammerData.length; i++) {
+      hammerData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.006));
+    }
+    const hammerSource = ctx.createBufferSource();
+    hammerSource.buffer = hammerBuffer;
 
-    osc1.connect(filter);
-    osc2.connect(filter);
-    filter.connect(gain);
-    gain.connect(dest);
+    const hammerFilter = ctx.createBiquadFilter();
+    hammerFilter.type = 'bandpass';
+    hammerFilter.frequency.setValueAtTime(Math.min(freq * 3.5, 7500), time);
+    hammerFilter.Q.setValueAtTime(2.0, time);
 
-    osc1.start(time);
-    osc2.start(time);
-    osc1.stop(time + duration + 0.16);
-    osc2.stop(time + duration + 0.16);
+    const hammerGain = ctx.createGain();
+    const hammerPeak = velocity * 0.16;
+    hammerGain.gain.setValueAtTime(hammerPeak, time);
+    hammerGain.gain.exponentialRampToValueAtTime(0.0001, time + 0.035);
+
+    hammerSource.connect(hammerFilter);
+    hammerFilter.connect(hammerGain);
+    hammerGain.connect(dest);
+
+    // Soundboard body filter (simulates wooden spruce piano body resonance)
+    const soundboardFilter = ctx.createBiquadFilter();
+    soundboardFilter.type = 'lowpass';
+    // Velocity scales filter brightness (harder strike = brighter soundboard excitation)
+    const cutoff = Math.min(freq * (3.8 + velocity * 2.2), 12000);
+    soundboardFilter.frequency.setValueAtTime(cutoff, time);
+    soundboardFilter.Q.setValueAtTime(1.5, time);
+    soundboardFilter.frequency.exponentialRampToValueAtTime(Math.min(freq * 1.5, 3200), time + Math.min(duration, 1.2));
+
+    // String gain envelope (rapid attack, acoustic multi-stage decay)
+    const noteGain = ctx.createGain();
+    const peakGain = velocity * 0.36;
+    noteGain.gain.setValueAtTime(0.0001, time);
+    noteGain.gain.linearRampToValueAtTime(peakGain, time + 0.004); // 4ms percussive attack
+    noteGain.gain.exponentialRampToValueAtTime(peakGain * 0.55, time + 0.14); // Initial prompt soundboard response
+    noteGain.gain.exponentialRampToValueAtTime(peakGain * 0.28, time + Math.min(duration, 0.8)); // Acoustic sustain
+    noteGain.gain.exponentialRampToValueAtTime(0.0001, time + duration + 0.12); // Damper release
+
+    // Connect string unisons to soundboard filter
+    string1.connect(soundboardFilter);
+    string2.connect(soundboardFilter);
+    string3.connect(soundboardFilter);
+    soundboardFilter.connect(noteGain);
+    noteGain.connect(dest);
+
+    // Start audio sources
+    hammerSource.start(time);
+    string1.start(time);
+    string2.start(time);
+    string3.start(time);
+
+    // Clean release
+    const stopTime = time + duration + 0.15;
+    string1.stop(stopTime);
+    string2.stop(stopTime);
+    string3.stop(stopTime);
+    hammerSource.stop(time + 0.04);
   }
 
+  // Alias for backward compatibility / fallback
+  playPianoNote(ctx, dest, midi, time, duration, velocity = 0.85) {
+    return this.playGrandPianoNote(ctx, dest, midi, time, duration, velocity);
+  }
+
+  // Unified chord tone dispatch based on active instrument selection
+  playChordTone(ctx, dest, midi, time, duration, velocity = 0.82) {
+    if (this.instrument === 'grand_piano' || this.instrument === 'piano') {
+      this.playGrandPianoNote(ctx, dest, midi, time, duration, velocity);
+    } else if (this.instrument === 'rhodes') {
+      this.playRhodesNote(ctx, dest, midi, time, duration, velocity);
+    } else if (this.instrument === 'guitar') {
+      this.playGuitarNote(ctx, dest, midi, time, duration, velocity);
+    } else if (this.instrument === 'strings') {
+      this.playStringsNote(ctx, dest, midi, time, duration, velocity);
+    } else {
+      this.playSynthLeadNote(ctx, dest, midi, time, duration, velocity);
+    }
+  }
+
+  // ==========================================
+  // ELECTRIC PIANO (RHODES FM)
+  // ==========================================
   playRhodesNote(ctx, dest, midi, time, duration, velocity = 0.8) {
     const freq = this.midiToFreq(midi);
     const carrier = ctx.createOscillator();
@@ -113,7 +186,7 @@ export class AudioEngine {
     modulator.type = 'sine';
     modulator.frequency.setValueAtTime(freq * 3.5, time);
     modGain.gain.setValueAtTime(freq * 1.5, time);
-    modGain.gain.exponentialRampToValueAtTime(0.1, time + 0.4);
+    modGain.gain.exponentialRampToValueAtTime(0.05, time + 0.4);
 
     modulator.connect(modGain);
     modGain.connect(carrier.frequency);
@@ -132,6 +205,9 @@ export class AudioEngine {
     modulator.stop(time + duration + 0.12);
   }
 
+  // ==========================================
+  // ACOUSTIC GUITAR
+  // ==========================================
   playGuitarNote(ctx, dest, midi, time, duration, velocity = 0.8) {
     const freq = this.midiToFreq(midi);
     const osc = ctx.createOscillator();
@@ -143,9 +219,9 @@ export class AudioEngine {
 
     filter.type = 'bandpass';
     filter.frequency.setValueAtTime(freq * 2.2, time);
-    filter.Q.setValueAtTime(2.5, time);
+    filter.Q.setValueAtTime(2.2, time);
 
-    const peak = velocity * 0.35;
+    const peak = velocity * 0.32;
     gain.gain.setValueAtTime(0.0001, time);
     gain.gain.linearRampToValueAtTime(peak, time + 0.005);
     gain.gain.exponentialRampToValueAtTime(peak * 0.3, time + 0.1);
@@ -159,6 +235,9 @@ export class AudioEngine {
     osc.stop(time + duration + 0.1);
   }
 
+  // ==========================================
+  // SYNTH LEAD
+  // ==========================================
   playSynthLeadNote(ctx, dest, midi, time, duration, velocity = 0.85) {
     const freq = this.midiToFreq(midi);
     const osc = ctx.createOscillator();
@@ -170,10 +249,10 @@ export class AudioEngine {
 
     filter.type = 'lowpass';
     filter.frequency.setValueAtTime(freq * 3.5, time);
-    filter.Q.setValueAtTime(3.0, time);
+    filter.Q.setValueAtTime(2.8, time);
     filter.frequency.exponentialRampToValueAtTime(freq * 1.5, time + duration);
 
-    const peak = velocity * 0.25;
+    const peak = velocity * 0.24;
     gain.gain.setValueAtTime(0.0001, time);
     gain.gain.linearRampToValueAtTime(peak, time + 0.008);
     gain.gain.setValueAtTime(peak * 0.75, time + duration * 0.85);
@@ -187,6 +266,9 @@ export class AudioEngine {
     osc.stop(time + duration + 0.08);
   }
 
+  // ==========================================
+  // WARM STRINGS
+  // ==========================================
   playStringsNote(ctx, dest, midi, time, duration, velocity = 0.75) {
     const freq = this.midiToFreq(midi);
     const osc1 = ctx.createOscillator();
@@ -196,18 +278,18 @@ export class AudioEngine {
 
     osc1.type = 'sawtooth';
     osc1.frequency.setValueAtTime(freq, time);
-    osc1.detune.setValueAtTime(-5, time);
+    osc1.detune.setValueAtTime(-4, time);
 
     osc2.type = 'sawtooth';
     osc2.frequency.setValueAtTime(freq, time);
-    osc2.detune.setValueAtTime(5, time);
+    osc2.detune.setValueAtTime(4, time);
 
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(1800, time);
+    filter.frequency.setValueAtTime(1700, time);
 
     const peak = velocity * 0.2;
     gain.gain.setValueAtTime(0.0001, time);
-    gain.gain.linearRampToValueAtTime(peak, time + 0.08); // slow attack
+    gain.gain.linearRampToValueAtTime(peak, time + 0.08);
     gain.gain.setValueAtTime(peak * 0.85, time + duration * 0.9);
     gain.gain.exponentialRampToValueAtTime(0.0001, time + duration + 0.25);
 
@@ -222,6 +304,9 @@ export class AudioEngine {
     osc2.stop(time + duration + 0.28);
   }
 
+  // ==========================================
+  // ACOUSTIC BASS
+  // ==========================================
   playBassNote(ctx, dest, midi, time, duration, velocity = 0.85) {
     const freq = this.midiToFreq(midi);
     const osc = ctx.createOscillator();
@@ -236,10 +321,10 @@ export class AudioEngine {
     subOsc.frequency.setValueAtTime(freq / 2, time);
 
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(380, time);
-    filter.frequency.exponentialRampToValueAtTime(140, time + duration * 0.7);
+    filter.frequency.setValueAtTime(360, time);
+    filter.frequency.exponentialRampToValueAtTime(130, time + duration * 0.7);
 
-    const peak = velocity * 0.4;
+    const peak = velocity * 0.38;
     gain.gain.setValueAtTime(0.0001, time);
     gain.gain.linearRampToValueAtTime(peak, time + 0.012);
     gain.gain.exponentialRampToValueAtTime(0.0001, time + duration + 0.05);
@@ -255,8 +340,9 @@ export class AudioEngine {
     subOsc.stop(time + duration + 0.07);
   }
 
-  // --- Drum Synthesizers ---
-
+  // ==========================================
+  // DRUM ACCOMPANIMENT & METRONOME
+  // ==========================================
   playKick(ctx, dest, time) {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -274,7 +360,7 @@ export class AudioEngine {
   }
 
   playSnare(ctx, dest, time) {
-    const bufferSize = ctx.sampleRate * 0.15;
+    const bufferSize = Math.floor(ctx.sampleRate * 0.15);
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
@@ -288,7 +374,7 @@ export class AudioEngine {
     noiseFilter.frequency.setValueAtTime(900, time);
 
     const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.45, time);
+    noiseGain.gain.setValueAtTime(0.4, time);
     noiseGain.gain.exponentialRampToValueAtTime(0.001, time + 0.14);
 
     noise.connect(noiseFilter);
@@ -298,8 +384,8 @@ export class AudioEngine {
 
     const osc = ctx.createOscillator();
     const oscGain = ctx.createGain();
-    osc.frequency.setValueAtTime(200, time);
-    osc.frequency.exponentialRampToValueAtTime(90, time + 0.08);
+    osc.frequency.setValueAtTime(190, time);
+    osc.frequency.exponentialRampToValueAtTime(85, time + 0.08);
     oscGain.gain.setValueAtTime(0.35, time);
     oscGain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
 
@@ -310,7 +396,7 @@ export class AudioEngine {
   }
 
   playHiHat(ctx, dest, time, closed = true) {
-    const bufferSize = ctx.sampleRate * (closed ? 0.04 : 0.18);
+    const bufferSize = Math.floor(ctx.sampleRate * (closed ? 0.04 : 0.18));
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
@@ -352,7 +438,7 @@ export class AudioEngine {
     const inst = type || this.instrument;
     const now = this.ctx.currentTime;
     midiNotes.forEach(m => {
-      if (inst === 'piano') this.playPianoNote(this.ctx, this.chordsGain, m, now, 0.8, 0.75);
+      if (inst === 'grand_piano' || inst === 'piano') this.playGrandPianoNote(this.ctx, this.chordsGain, m, now, 0.9, 0.85);
       else if (inst === 'rhodes') this.playRhodesNote(this.ctx, this.chordsGain, m, now, 0.8, 0.75);
       else if (inst === 'guitar') this.playGuitarNote(this.ctx, this.chordsGain, m, now, 0.8, 0.75);
       else if (inst === 'strings') this.playStringsNote(this.ctx, this.chordsGain, m, now, 0.9, 0.7);
@@ -360,7 +446,7 @@ export class AudioEngine {
     });
   }
 
-  // --- Export WAV Audio ---
+  // --- WAV Audio File Export ---
   async exportWavBlob(song, theory) {
     const secondsPer16th = 60 / song.bpm / 4;
     const totalSteps = song.bars * 16;
@@ -382,7 +468,7 @@ export class AudioEngine {
       const time = startStep * secondsPer16th;
       const dur = durSteps * secondsPer16th;
 
-      voicing.treble.forEach(m => this.playPianoNote(offlineCtx, offlineCtx.destination, m, time, dur, 0.75));
+      voicing.treble.forEach(m => this.playGrandPianoNote(offlineCtx, offlineCtx.destination, m, time, dur, 0.8));
       this.playBassNote(offlineCtx, offlineCtx.destination, 36 + details.bassPc, time, dur, 0.85);
     });
 
@@ -391,10 +477,10 @@ export class AudioEngine {
       const pitch = theory.rowToPitch(note.row, song.key, song.mode).midi;
       const time = note.step * secondsPer16th;
       const dur = (note.duration || 1) * secondsPer16th;
-      this.playSynthLeadNote(offlineCtx, offlineCtx.destination, pitch, time, dur, 0.85);
+      this.playGrandPianoNote(offlineCtx, offlineCtx.destination, pitch, time, dur, 0.9);
     });
 
-    // Schedule drum beat if enabled
+    // Schedule drums if enabled
     if (this.drumStyle !== 'none') {
       for (let s = 0; s < totalSteps; s++) {
         const time = s * secondsPer16th;
@@ -420,7 +506,6 @@ export class AudioEngine {
     const sampleRate = buffer.sampleRate;
     const format = 1;
     const bitDepth = 16;
-
     const bytesPerSample = bitDepth / 8;
     const blockAlign = numChannels * bytesPerSample;
     const dataLength = buffer.length * blockAlign;

@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Songsketch – Music Theory & Songwriting Studio (Hooktheory Clone)</title>
-  <meta name="description" content="A comprehensive songwriting and music theory studio inspired by Hooktheory: Hookpad with Magic Palette, TheoryTab song database, Chord Crush ear training, chord trends, and interactive music theory books.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎹</text></svg>">
+  <title>Songsketch – Music Theory &amp; Songwriting Studio</title>
+  <meta name="description" content="A restrained songwriting and music theory studio: interactive Hookpad DAW with Concert Grand Piano, TheoryTab chord analysis, ear training, and harmonic trend references.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231e40af'/><text x='16' y='22' font-family='sans-serif' font-size='16' font-weight='bold' text-anchor='middle' fill='white'>S</text></svg>">
   
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/hookpad.css">
@@ -19,53 +19,53 @@
   <header class="app-nav">
     <div class="nav-container">
       <a href="#" class="brand">
-        <span>🎹 Songsketch</span>
+        <span class="brand-title">Songsketch</span>
         <span class="brand-badge">STUDIO</span>
       </a>
 
       <!-- Primary Navigation Tabs -->
-      <ul class="nav-tabs">
-        <li>
-          <button class="nav-tab-btn active" data-tab="hookpad">
-            <span>🎹</span> Hookpad
+      <ul class="nav-tabs" role="tablist">
+        <li role="presentation">
+          <button class="nav-tab-btn active" data-tab="hookpad" role="tab" aria-selected="true">
+            Studio
           </button>
         </li>
-        <li>
-          <button class="nav-tab-btn" data-tab="theorytab">
-            <span>🔍</span> TheoryTab Songs
+        <li role="presentation">
+          <button class="nav-tab-btn" data-tab="theorytab" role="tab" aria-selected="false">
+            TheoryTab Songs
           </button>
         </li>
-        <li>
-          <button class="nav-tab-btn" data-tab="chordcrush">
-            <span>🎮</span> Chord Crush
+        <li role="presentation">
+          <button class="nav-tab-btn" data-tab="chordcrush" role="tab" aria-selected="false">
+            Ear Training
           </button>
         </li>
-        <li>
-          <button class="nav-tab-btn" data-tab="trends">
-            <span>📈</span> Trends
+        <li role="presentation">
+          <button class="nav-tab-btn" data-tab="trends" role="tab" aria-selected="false">
+            Harmonic Trends
           </button>
         </li>
-        <li>
-          <button class="nav-tab-btn" data-tab="academy">
-            <span>📚</span> Theory Academy
+        <li role="presentation">
+          <button class="nav-tab-btn" data-tab="academy" role="tab" aria-selected="false">
+            Theory Academy
           </button>
         </li>
-        <li>
-          <button class="nav-tab-btn" data-tab="cheatsheet">
-            <span>📋</span> Cheat Sheet
+        <li role="presentation">
+          <button class="nav-tab-btn" data-tab="cheatsheet" role="tab" aria-selected="false">
+            Cheat Sheet
           </button>
         </li>
       </ul>
 
       <!-- Action Buttons -->
       <div class="nav-actions">
-        <button class="btn btn-icon" id="shortcuts-btn" title="Keyboard Shortcuts">⌨️</button>
-        <button class="btn btn-icon" id="theme-toggle-btn" title="Toggle Dark/Light Mode">
-          <span id="theme-icon">🌙</span>
+        <button class="btn btn-sm" id="shortcuts-btn" title="Keyboard Shortcuts">Shortcuts</button>
+        <button class="btn btn-sm" id="theme-toggle-btn" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
+          <span id="theme-icon">Theme</span>
         </button>
-        <button class="btn" id="open-project-btn" title="Open saved project JSON">📂 Open</button>
-        <button class="btn" id="save-project-btn" title="Save project JSON">💾 Save</button>
-        <button class="btn btn-primary" id="share-btn" title="Copy shareable link">🔗 Share</button>
+        <button class="btn btn-sm" id="open-project-btn" title="Open saved project JSON">Open</button>
+        <button class="btn btn-sm" id="save-project-btn" title="Save project JSON">Save</button>
+        <button class="btn btn-sm btn-primary" id="share-btn" title="Copy shareable link">Share</button>
       </div>
     </div>
   </header>
@@ -73,43 +73,43 @@
   <!-- Main Workspace -->
   <main class="main-content">
 
-    <!-- ================= TAB 1: HOOKPAD (AUTHENTIC HOOKTHEORY DAW) ================= -->
-    <section class="tab-pane active" id="tab-hookpad">
+    <!-- ================= TAB 1: HOOKPAD DAW ================= -->
+    <section class="tab-pane active" id="tab-hookpad" role="tabpanel">
       <div class="hookpad-studio-wrapper">
 
         <!-- 1. Top Menubar -->
         <div class="hookpad-menubar">
           <div class="hookpad-menubar-left">
-            <span class="hookpad-brand-title">🎹 Hookpad</span>
+            <span class="hookpad-brand-title">Songsketch DAW</span>
             <div class="hookpad-menu-items">
-              <span class="hookpad-menu-item" id="menu-new-btn">File</span>
-              <span class="hookpad-menu-item" id="menu-edit-btn">Edit</span>
-              <span class="hookpad-menu-item" id="menu-settings-btn">Settings</span>
-              <span class="hookpad-menu-item" id="menu-help-btn">Help</span>
+              <span class="hookpad-menu-item" id="menu-new-btn" tabindex="0">File</span>
+              <span class="hookpad-menu-item" id="menu-edit-btn" tabindex="0">Edit</span>
+              <span class="hookpad-menu-item" id="menu-settings-btn" tabindex="0">Settings</span>
+              <span class="hookpad-menu-item" id="menu-help-btn" tabindex="0">Help</span>
             </div>
           </div>
           <div class="hookpad-menubar-right">
             <span id="song-title-display">Untitled Track</span>
-            <span style="opacity: 0.6;">•</span>
-            <span style="color: #10b981;">Autosaved</span>
+            <span style="opacity: 0.4;">|</span>
+            <span style="color: var(--success); font-weight: 600;">Autosaved</span>
           </div>
         </div>
 
         <!-- 2. Main Transport & Action Toolbar -->
         <div class="hookpad-toolbar">
           <div class="toolbar-left-group">
-            <button class="hookpad-play-circle-btn" id="play-btn" title="Play / Stop (Space)">▶</button>
+            <button class="hookpad-play-circle-btn" id="play-btn" title="Play / Stop (Space)" aria-label="Play or Stop Track">Play</button>
             
             <button class="toolbar-pill-btn" id="meter-btn" title="Toggle Meter">
               <span id="meter-val">4/4</span>
               <small>Meter</small>
             </button>
 
-            <div class="transport-label" style="display:flex; flex-direction:column; gap:2px;">
-              <small style="font-size:0.65rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Key & Mode</small>
+            <div class="transport-label">
+              <small>Key &amp; Mode</small>
               <div style="display:flex; gap:4px;">
-                <select class="transport-select" id="key-select" style="padding:4px 6px; font-size:0.85rem; font-weight:700;"></select>
-                <select class="transport-select" id="mode-select" style="padding:4px 6px; font-size:0.85rem; font-weight:700;">
+                <select class="transport-select" id="key-select" aria-label="Musical Key"></select>
+                <select class="transport-select" id="mode-select" aria-label="Musical Mode">
                   <option value="major">Major (Ionian)</option>
                   <option value="minor">Natural Minor</option>
                   <option value="dorian">Dorian</option>
@@ -119,50 +119,51 @@
               </div>
             </div>
 
-            <div class="transport-label bpm-control" style="margin-left: 6px;">
+            <div class="transport-label bpm-control">
               <div style="display:flex; flex-direction:column; gap:2px;">
                 <div style="display:flex; justify-content:space-between;">
-                  <small style="font-size:0.65rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Tempo</small>
-                  <span class="bpm-value" id="bpm-display" style="font-size:0.85rem;">100</span>
+                  <small>Tempo</small>
+                  <span class="bpm-value" id="bpm-display">100</span>
                 </div>
-                <input type="range" id="bpm-slider" min="40" max="220" value="100" style="width: 80px;">
+                <input type="range" id="bpm-slider" min="40" max="220" value="100" style="width: 80px;" aria-label="Tempo BPM">
               </div>
             </div>
 
-            <button class="toolbar-pill-btn active" id="loop-toggle-btn">
-              <span>🔁</span>
-              <small>Loop</small>
+            <button class="toolbar-pill-btn active" id="loop-toggle-btn" aria-label="Toggle Playback Loop">
+              <span>Loop</span>
+              <small>Repeat</small>
             </button>
 
-            <button class="toolbar-pill-btn" id="metronome-btn">
-              <span>⏱️</span>
-              <small>Click</small>
+            <button class="toolbar-pill-btn" id="metronome-btn" aria-label="Toggle Metronome Click">
+              <span>Click</span>
+              <small>Timing</small>
             </button>
           </div>
 
           <div class="toolbar-left-group">
-            <div class="transport-label" style="display:flex; flex-direction:column; gap:2px;">
-              <small style="font-size:0.65rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Band / Sound</small>
-              <select class="transport-select" id="inst-select" style="padding:4px 6px; font-size:0.85rem;">
-                <option value="piano" selected>🎹 Acoustic Piano</option>
-                <option value="rhodes">⚡ Electric Piano</option>
-                <option value="guitar">🎸 Acoustic Guitar</option>
-                <option value="synth">🎛️ Synth Lead</option>
-                <option value="strings">🎻 Warm Strings</option>
+            <div class="transport-label">
+              <small>Instrument Voice</small>
+              <select class="transport-select" id="inst-select" aria-label="Instrument Voice">
+                <option value="grand_piano" selected>Concert Grand Piano</option>
+                <option value="piano">Upright Acoustic Piano</option>
+                <option value="rhodes">Electric Piano (Rhodes)</option>
+                <option value="guitar">Acoustic Steel Guitar</option>
+                <option value="synth">Polyphonic Synthesizer</option>
+                <option value="strings">Symphonic Strings</option>
               </select>
             </div>
 
-            <div class="transport-label" style="display:flex; flex-direction:column; gap:2px;">
-              <small style="font-size:0.65rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Drums Groove</small>
-              <select class="transport-select" id="drum-select" style="padding:4px 6px; font-size:0.85rem;">
-                <option value="pop" selected>🥁 Pop 4/4 Beat</option>
+            <div class="transport-label">
+              <small>Rhythm Groove</small>
+              <select class="transport-select" id="drum-select" aria-label="Drum Style">
+                <option value="pop" selected>Pop 4/4 Beat</option>
                 <option value="hiphop">Boom-Bap / Lo-Fi</option>
                 <option value="ballad">Gentle Ballad</option>
                 <option value="none">None (Silent)</option>
               </select>
             </div>
 
-            <select class="transport-select" id="progression-preset-select" style="max-width: 140px; padding:4px 6px; font-size:0.8rem; align-self: flex-end;">
+            <select class="transport-select" id="progression-preset-select" style="max-width: 140px; align-self: flex-end;" aria-label="Load Progression Preset">
               <option value="">Load Preset…</option>
               <option value="The Pop 4-Chord Axis">Pop 4-Chord (I-V-vi-IV)</option>
               <option value="Sensitive Female Progression">Sensitive (vi-IV-I-V)</option>
@@ -173,9 +174,9 @@
               <option value="Pachelbel Canon Sequence">Pachelbel Sequence</option>
             </select>
 
-            <button class="btn btn-sm" id="leadsheet-btn" title="View Lead Sheet & Guitar Tabs" style="align-self: flex-end;">🎼 Notation / Tabs</button>
-            <button class="btn btn-sm btn-success" id="midi-export-btn" title="Export Multi-Track MIDI" style="align-self: flex-end;">🎹 MIDI</button>
-            <button class="btn btn-sm" id="wav-export-btn" title="Render Studio WAV Audio" style="align-self: flex-end;">🔊 WAV</button>
+            <button class="btn btn-sm" id="leadsheet-btn" title="View Lead Sheet &amp; Guitar Tabs" style="align-self: flex-end;">Notation / Tabs</button>
+            <button class="btn btn-sm" id="midi-export-btn" title="Export Multi-Track MIDI" style="align-self: flex-end;">MIDI</button>
+            <button class="btn btn-sm btn-primary" id="wav-export-btn" title="Render Studio WAV Audio" style="align-self: flex-end;">WAV Audio</button>
           </div>
         </div>
 
@@ -185,23 +186,23 @@
           <!-- Left: Duration Picker -->
           <div class="duration-picker-box">
             <span class="duration-picker-title">Duration</span>
-            <button class="duration-bar-btn" data-beats="4" title="Whole Note (4 Beats)">
+            <button class="duration-bar-btn" data-beats="4" title="Whole Note (4 Beats)" aria-label="Duration 4 Beats">
               <span>4</span>
               <div class="bar-visual" style="width: 48px;"></div>
             </button>
-            <button class="duration-bar-btn" data-beats="2" title="Half Note (2 Beats)">
+            <button class="duration-bar-btn" data-beats="2" title="Half Note (2 Beats)" aria-label="Duration 2 Beats">
               <span>2</span>
               <div class="bar-visual" style="width: 32px;"></div>
             </button>
-            <button class="duration-bar-btn active" data-beats="1" title="Quarter Note (1 Beat)">
+            <button class="duration-bar-btn active" data-beats="1" title="Quarter Note (1 Beat)" aria-label="Duration 1 Beat">
               <span>1</span>
               <div class="bar-visual" style="width: 20px;"></div>
             </button>
-            <button class="duration-bar-btn" data-beats="0.5" title="Eighth Note (1/2 Beat)">
+            <button class="duration-bar-btn" data-beats="0.5" title="Eighth Note (1/2 Beat)" aria-label="Duration Half Beat">
               <span>½</span>
               <div class="bar-visual" style="width: 12px;"></div>
             </button>
-            <button class="duration-bar-btn" data-beats="0.25" title="Sixteenth Note (1/4 Beat)">
+            <button class="duration-bar-btn" data-beats="0.25" title="Sixteenth Note (1/4 Beat)" aria-label="Duration Quarter Beat">
               <span>¼</span>
               <div class="bar-visual" style="width: 6px;"></div>
             </button>
@@ -215,20 +216,20 @@
                 <button class="mode-tab-pill" id="tab-mode-notes">Notes in Key</button>
               </div>
 
-              <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">
-                Press keys <strong>1–7</strong> on your keyboard to insert instantly
+              <div style="font-size: 0.75rem; color: var(--ink-muted); font-weight: 500;">
+                Press keys <strong>1–7</strong> on your keyboard to insert diatonic degrees
               </div>
             </div>
 
             <!-- Diatonic Buttons Container -->
             <div class="diatonic-strip" id="diatonic-strip"></div>
 
-            <!-- Magic Palette Strip (as seen in Hooktheory frame_58s.jpg) -->
+            <!-- Magic Palette Strip -->
             <div class="magic-palette-container" id="magic-palette-box">
               <div class="magic-palette-header">
-                <span class="magic-tab-active">✨ Magic Suggestions</span>
-                <span style="opacity: 0.5;">Popular Transitions</span>
-                <span style="opacity: 0.5;">Database AI</span>
+                <span class="magic-tab-active">Suggested Transitions</span>
+                <span style="opacity: 0.5;">Popular Progressions</span>
+                <span style="opacity: 0.5;">Harmonic Paths</span>
               </div>
               <div class="magic-suggestions-scroll" id="magic-suggestions-scroll"></div>
             </div>
@@ -272,14 +273,14 @@
             </div>
 
             <div style="margin-top:auto; display:flex; gap:6px;">
-              <button class="btn btn-sm" id="btn-delete-item" style="flex:1; color:#ef4444;">🗑️ Delete</button>
+              <button class="btn btn-sm btn-danger" id="btn-delete-item" style="flex:1;">Delete</button>
               <button class="btn btn-sm" id="btn-clear-all" style="flex:1;">Clear All</button>
             </div>
           </div>
 
         </div>
 
-        <!-- 4. Timeline Workspace (Rainbow Scale-Degree Lanes) -->
+        <!-- 4. Timeline Workspace (Mineral Scale-Degree Lanes) -->
         <div class="hookpad-timeline-container" id="timeline-container">
           <div class="hookpad-timeline-inner" id="timeline-inner">
             <!-- Animated Playhead Cursor -->
@@ -288,7 +289,7 @@
             <!-- Measure Ruler -->
             <div class="hookpad-measure-ruler" id="measure-ruler"></div>
 
-            <!-- Melody Roll with Rainbow Lanes -->
+            <!-- Melody Roll with Mineral Lanes -->
             <div class="hookpad-melody-roll">
               <div class="hookpad-row-headers" id="melody-row-headers"></div>
               <div class="melody-lane-grid" id="melody-lane-grid"></div>
@@ -302,11 +303,11 @@
           </div>
         </div>
 
-        <!-- Interactive Piano Keyboard at the bottom -->
-        <div class="piano-keyboard-widget" style="margin: 0; border-top: 1px solid #cbd5e1; border-radius: 0;">
+        <!-- Interactive Reference Piano Keyboard at the bottom -->
+        <div class="piano-keyboard-widget">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <span style="font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Real-Time Interactive Piano Keyboard</span>
-            <span style="font-size: 0.75rem; color: var(--text-muted);">Keys illuminate in matching scale-degree colors</span>
+            <span style="font-size: 0.78rem; font-weight: 700; color: var(--ink-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Reference Piano Keyboard</span>
+            <span style="font-size: 0.75rem; color: var(--ink-muted);">Keys illuminate in matching mineral tonal markers</span>
           </div>
           <div class="keyboard-keys-wrapper" id="keyboard-keys-wrapper"></div>
         </div>
@@ -315,10 +316,11 @@
     </section>
 
     <!-- ================= TAB 2: THEORYTAB DATABASE & GRAPH ================= -->
-    <section class="tab-pane" id="tab-theorytab">
+    <section class="tab-pane" id="tab-theorytab" role="tabpanel">
       <div class="theorytab-hero">
         <h2>TheoryTab Song Library</h2>
-        <p>Explore famous billboard songs analyzed using Roman numerals and relative scale degrees. Build out chord progressions in the interactive transition graph to discover matching songs!</p>
+        <p>Explore reference song progressions analyzed with Roman numerals and scale degrees. Select branching nodes in the progression tree to discover harmonic matches.</p>
+        <p style="font-size: 0.75rem; color: var(--ink-muted); margin-top: -8px; margin-bottom: 14px;">Simulated educational catalog for personal study.</p>
         
         <div class="search-bar-row">
           <div class="search-input-wrap">
@@ -333,29 +335,27 @@
           <button class="genre-pill" data-genre="Classical">Classical</button>
           <button class="genre-pill" data-genre="Disco">Disco / Funk</button>
           <button class="genre-pill" data-genre="Alternative">Alternative</button>
-          <button class="genre-pill" data-genre="Soul">Soul / R&B</button>
+          <button class="genre-pill" data-genre="Soul">Soul / R&amp;B</button>
         </div>
       </div>
 
       <!-- TheoryTab Two-Column View: Graph + Songs -->
       <div class="theorytab-explorer-grid">
         
-        <!-- Interactive Progression Graph (from frame_37s.jpg) -->
+        <!-- Interactive Progression Graph -->
         <div class="progression-graph-card">
           <div class="graph-card-title">
             <span>Chord Progression Tree</span>
             <button class="btn btn-sm" id="btn-reset-graph">Reset Tree</button>
           </div>
-          <p style="font-size: 0.78rem; color: var(--text-muted);">
-            Click any branching chord circle to extend the progression path and find matching songs:
+          <p style="font-size: 0.78rem; color: var(--ink-muted);">
+            Click any branching chord circle to extend the progression path:
           </p>
 
-          <div class="graph-interactive-viewport" id="graph-viewport">
-            <!-- Center Node & Branch Nodes rendered dynamically -->
-          </div>
+          <div class="graph-interactive-viewport" id="graph-viewport"></div>
 
           <div class="active-sequence-strip" id="graph-sequence-strip">
-            <span style="font-size: 0.78rem; color: var(--text-muted);">Active Path:</span>
+            <span style="font-size: 0.78rem; color: var(--ink-muted);">Active Path:</span>
             <span class="seq-chip">I</span>
           </div>
         </div>
@@ -366,8 +366,8 @@
       </div>
     </section>
 
-    <!-- ================= TAB 3: CHORD CRUSH (EAR TRAINING) ================= -->
-    <section class="tab-pane" id="tab-chordcrush">
+    <!-- ================= TAB 3: EAR TRAINING (CHORD CRUSH) ================= -->
+    <section class="tab-pane" id="tab-chordcrush" role="tabpanel">
       <div class="chordcrush-app-canvas">
         
         <!-- Top Bar: Score, Curve, Timer -->
@@ -385,9 +385,8 @@
 
         <!-- Center Stage: Progression Track & Choices -->
         <div class="crush-center-stage">
-          
-          <div style="text-align: center; color: #ffffff; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">
-            Listen to the progression and identify the mystery chord at the arrow marker!
+          <div class="crush-instructions">
+            Listen to the progression and identify the mystery chord at the arrow marker.
           </div>
 
           <!-- Horizontal Timeline Track -->
@@ -395,18 +394,17 @@
 
           <!-- 4 Choice Cards in a Row -->
           <div class="crush-choices-deck" id="crush-choices-deck"></div>
-
         </div>
 
         <!-- Bottom Bar: Key, Sound, Replay Button -->
         <div class="crush-bottom-bar">
           <div style="display: flex; gap: 8px;">
-            <div class="crush-pill-badge">🎵 C MAJ</div>
-            <div class="crush-pill-badge">🎹 MELLOW PIANO</div>
-            <div class="crush-pill-badge" id="crush-level-pill">LEVEL 1</div>
+            <div class="crush-pill-badge">Key of C Major</div>
+            <div class="crush-pill-badge">Concert Grand Voice</div>
+            <div class="crush-pill-badge" id="crush-level-pill">Level 1</div>
           </div>
 
-          <button class="crush-play-btn" id="btn-crush-listen">▶ REPLAY AUDIO</button>
+          <button class="crush-play-btn" id="btn-crush-listen">Replay Audio</button>
         </div>
 
         <!-- Toast Feedback -->
@@ -416,18 +414,18 @@
     </section>
 
     <!-- ================= TAB 4: TRENDS ================= -->
-    <section class="tab-pane" id="tab-trends">
+    <section class="tab-pane" id="tab-trends" role="tabpanel">
       <div class="trends-container">
         <div class="trends-header-card">
-          <h2 style="font-size: 1.5rem; margin-bottom: 6px;">Chord Trends & Probability Explorer</h2>
-          <p style="color: var(--text-muted); margin-bottom: 16px;">
-            Based on harmonic frequency analysis of thousands of billboard hit songs. Select any chord to see which chords are most likely to follow!
+          <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 6px; color: var(--ink-primary);">Harmonic Trends &amp; Transition Probabilities</h2>
+          <p style="color: var(--ink-secondary); margin-bottom: 16px; font-size: 0.92rem;">
+            Relative transition likelihoods across popular Western songs. Select a chord to view empirical resolutions.
           </p>
 
           <div class="trends-matrix-grid">
             <div>
-              <label style="font-weight: 700; font-size: 0.9rem; display: block; margin-bottom: 6px;">Current Chord:</label>
-              <select class="transport-select" id="trends-current-chord" style="width: 100%; font-size: 1.1rem; padding: 10px;">
+              <label for="trends-current-chord" style="font-weight: 600; font-size: 0.88rem; display: block; margin-bottom: 6px; color: var(--ink-primary);">Current Chord:</label>
+              <select class="transport-select" id="trends-current-chord" style="width: 100%; font-size: 1rem; padding: 8px 12px;">
                 <option value="I">I (Tonic Major)</option>
                 <option value="IV">IV (Subdominant)</option>
                 <option value="V">V (Dominant)</option>
@@ -446,17 +444,17 @@
         </div>
 
         <div>
-          <h3 style="font-size: 1.3rem; margin-bottom: 12px;">Famous Songwriting Cadences & Formulas</h3>
+          <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 12px; color: var(--ink-primary);">Famous Songwriting Cadences</h3>
           <div class="cadence-grid" id="famous-cadences-grid"></div>
         </div>
       </div>
     </section>
 
     <!-- ================= TAB 5: THEORY ACADEMY ================= -->
-    <section class="tab-pane" id="tab-academy">
+    <section class="tab-pane" id="tab-academy" role="tabpanel">
       <div class="academy-container">
         <aside class="academy-sidebar">
-          <h3 style="font-size: 0.95rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 12px;">
+          <h3 style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ink-secondary); margin-bottom: 12px;">
             Curriculum
           </h3>
           <ul class="lesson-nav-list" id="lesson-nav-list"></ul>
@@ -467,10 +465,10 @@
     </section>
 
     <!-- ================= TAB 6: CHEAT SHEET ================= -->
-    <section class="tab-pane" id="tab-cheatsheet">
+    <section class="tab-pane" id="tab-cheatsheet" role="tabpanel">
       <div class="cheat-sheet-card">
-        <h2 style="font-size: 1.4rem; margin-bottom: 6px;">Roman Numeral Diatonic Cheat Sheet</h2>
-        <p style="color: var(--text-muted); margin-bottom: 18px;">
+        <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 6px; color: var(--ink-primary);">Roman Numeral Diatonic Cheat Sheet</h2>
+        <p style="color: var(--ink-secondary); margin-bottom: 18px; font-size: 0.92rem;">
           Quick reference matrix of diatonic triads for all 12 major keys.
         </p>
         <table class="theory-table">
@@ -494,32 +492,32 @@
   </main>
 
   <!-- Lead Sheet & Guitar Tabs Modal -->
-  <div class="modal-overlay" id="leadsheet-modal">
+  <div class="modal-overlay" id="leadsheet-modal" role="dialog" aria-modal="true" aria-labelledby="leadsheet-title">
     <div class="modal-card leadsheet-modal-card">
       <div class="modal-header">
         <div class="sheet-tab-buttons">
-          <button class="btn btn-primary" id="btn-show-sheet-music">🎼 Sheet Music (Lead Sheet)</button>
-          <button class="btn" id="btn-show-guitar-tabs">🎸 Guitar Tabs & Chords</button>
+          <button class="btn btn-primary" id="btn-show-sheet-music">Lead Sheet</button>
+          <button class="btn" id="btn-show-guitar-tabs">Guitar Tabs &amp; Chords</button>
         </div>
-        <button class="modal-close" id="leadsheet-modal-close-btn">&times;</button>
+        <button class="modal-close" id="leadsheet-modal-close-btn" aria-label="Close modal">&times;</button>
       </div>
       <div id="leadsheet-content-container"></div>
     </div>
   </div>
 
   <!-- Shortcuts Modal -->
-  <div class="modal-overlay" id="shortcuts-modal">
+  <div class="modal-overlay" id="shortcuts-modal" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>Keyboard Shortcuts</h3>
-        <button class="modal-close" id="modal-close-btn">&times;</button>
+        <h3 id="shortcuts-title" style="font-size: 1.15rem; font-weight: 700;">Keyboard Shortcuts</h3>
+        <button class="modal-close" id="modal-close-btn" aria-label="Close modal">&times;</button>
       </div>
-      <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
-        <tr style="border-bottom: 1px solid var(--border);"><td style="padding: 8px 0;"><strong>Spacebar</strong></td><td>Play / Pause playback</td></tr>
-        <tr style="border-bottom: 1px solid var(--border);"><td style="padding: 8px 0;"><strong>1 – 7 Keys</strong></td><td>Insert diatonic chord or melody note on that scale degree</td></tr>
-        <tr style="border-bottom: 1px solid var(--border);"><td style="padding: 8px 0;"><strong>→ (Right Arrow)</strong></td><td>Move playhead / slot to next position</td></tr>
-        <tr style="border-bottom: 1px solid var(--border);"><td style="padding: 8px 0;"><strong>← (Left Arrow)</strong></td><td>Move playhead / slot to previous position</td></tr>
-        <tr style="border-bottom: 1px solid var(--border);"><td style="padding: 8px 0;"><strong>Backspace / Del</strong></td><td>Clear chord or note at selected slot</td></tr>
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 10px;">
+        <tr style="border-bottom: 1px solid var(--border-subtle);"><td style="padding: 8px 0; font-weight: 600;">Spacebar</td><td style="color: var(--ink-secondary);">Play / Pause playback</td></tr>
+        <tr style="border-bottom: 1px solid var(--border-subtle);"><td style="padding: 8px 0; font-weight: 600;">Keys 1 – 7</td><td style="color: var(--ink-secondary);">Insert diatonic chord or melody note on that scale degree</td></tr>
+        <tr style="border-bottom: 1px solid var(--border-subtle);"><td style="padding: 8px 0; font-weight: 600;">Right Arrow</td><td style="color: var(--ink-secondary);">Move cursor to next beat slot</td></tr>
+        <tr style="border-bottom: 1px solid var(--border-subtle);"><td style="padding: 8px 0; font-weight: 600;">Left Arrow</td><td style="color: var(--ink-secondary);">Move cursor to previous beat slot</td></tr>
+        <tr style="border-bottom: 1px solid var(--border-subtle);"><td style="padding: 8px 0; font-weight: 600;">Backspace / Delete</td><td style="color: var(--ink-secondary);">Clear selected chord or note slot</td></tr>
       </table>
     </div>
   </div>
@@ -528,7 +526,7 @@
   <input type="file" id="project-file-input" accept=".json" style="display: none;">
 
   <!-- Toast Notification -->
-  <div id="toast"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
 
   <!-- App Script (ES Module) -->
   <script type="module" src="js/app.js"></script>

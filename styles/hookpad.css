@@ -1,29 +1,25 @@
-/* styles/hookpad.css - Authentic Hookpad Studio Layout matching frame_55s.jpg & frame_62s.jpg */
+/* styles/hookpad.css - Songwriting Studio Layout (Apple-Style Restraint) */
 
 .hookpad-studio-wrapper {
-  background: #ffffff;
-  border: 1px solid #d0d7e5;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  box-shadow: var(--shadow-subtle);
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-[data-theme="dark"] .hookpad-studio-wrapper {
-  background: #161b22;
-  border-color: #30363d;
-}
-
-/* 1. Hookpad Top Menu Bar */
+/* 1. Menubar & Status */
 .hookpad-menubar {
-  background: #253342;
-  color: #eaeff5;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-subtle);
   padding: 6px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
+  color: var(--ink-secondary);
 }
 
 .hookpad-menubar-left {
@@ -33,43 +29,36 @@
 }
 
 .hookpad-brand-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 800;
-  color: #ffffff;
-  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+  letter-spacing: -0.01em;
 }
 
 .hookpad-menu-items {
   display: flex;
   gap: 12px;
-  color: #9ab0c7;
   font-weight: 500;
 }
 
 .hookpad-menu-item {
   cursor: pointer;
-  transition: color 0.1s;
 }
-
 .hookpad-menu-item:hover {
-  color: #ffffff;
+  color: var(--ink-primary);
 }
 
 .hookpad-menubar-right {
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: #9ab0c7;
-  font-size: 0.8rem;
+  gap: 8px;
+  font-size: 0.78rem;
 }
 
-/* 2. Main Transport & Action Toolbar */
+/* 2. Main Transport Bar */
 .hookpad-toolbar {
-  background: #f1f4f9;
-  border-bottom: 1px solid #d0d7e5;
-  padding: 8px 16px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 10px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -77,161 +66,164 @@
   flex-wrap: wrap;
 }
 
-[data-theme="dark"] .hookpad-toolbar {
-  background: #1c222d;
-  border-color: #30363d;
-}
-
 .toolbar-left-group {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
-/* Orange Circular Play Button */
+/* Restrained Transport Play Button */
 .hookpad-play-circle-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: #f97316;
+  min-width: 56px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-primary);
   color: #ffffff;
   border: none;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
+  font-size: 0.82rem;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 3px 8px rgba(249, 115, 22, 0.4);
-  transition: all 0.15s ease;
+  padding: 0 12px;
+  transition: background 0.12s ease;
 }
 
 .hookpad-play-circle-btn:hover {
-  background: #ea580c;
-  transform: scale(1.05);
+  background: var(--accent-hover);
 }
 
 .hookpad-play-circle-btn.playing {
-  background: #ef4444;
+  background: var(--danger);
 }
 
 .toolbar-pill-btn {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  padding: 5px 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 4px 10px;
   font-size: 0.8rem;
-  font-weight: 700;
-  color: #334155;
+  font-weight: 600;
+  color: var(--ink-primary);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
-  line-height: 1.1;
-}
-
-[data-theme="dark"] .toolbar-pill-btn {
-  background: #212836;
-  border-color: #3d4659;
-  color: #e2e8f0;
+  line-height: 1.15;
 }
 
 .toolbar-pill-btn small {
   font-size: 0.65rem;
-  color: #64748b;
-  font-weight: 600;
+  color: var(--ink-muted);
   text-transform: uppercase;
 }
 
 .toolbar-pill-btn.active {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: #ffffff;
-}
-.toolbar-pill-btn.active small {
-  color: #dbeafe;
+  background: var(--bg-subtle);
+  border-color: var(--ink-primary);
 }
 
-/* 3. Control Palette Deck (Duration + Chords/Notes Palette + Magic Palette) */
+.transport-select {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--ink-primary);
+  outline: none;
+  font-family: inherit;
+}
+
+.transport-select:focus {
+  border-color: var(--accent-primary);
+}
+
+/* 3. Control Palette Deck */
 .hookpad-palette-deck {
   display: grid;
-  grid-template-columns: 140px 1fr 240px;
-  border-bottom: 2px solid #d0d7e5;
-  background: #ffffff;
+  grid-template-columns: 130px 1fr 240px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
 }
 
-[data-theme="dark"] .hookpad-palette-deck {
-  border-color: #30363d;
-  background: #161b22;
-}
-
-@media (max-width: 1080px) {
+@media (max-width: 1060px) {
   .hookpad-palette-deck {
     grid-template-columns: 1fr;
   }
+
+  .duration-picker-box {
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle);
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .hookpad-properties-inspector {
+    border-left: none;
+    border-top: 1px solid var(--border-subtle);
+  }
 }
 
-/* Left: Duration Selector (Vertical Bar Graph) */
+/* Left Duration Bar Picker */
 .duration-picker-box {
-  border-right: 1px solid #d0d7e5;
-  padding: 10px;
+  border-right: 1px solid var(--border-subtle);
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-[data-theme="dark"] .duration-picker-box {
-  border-color: #30363d;
-}
-
 .duration-picker-title {
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink-muted);
   text-transform: uppercase;
-  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
 }
 
 .duration-bar-btn {
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
   padding: 4px 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
+  color: var(--ink-primary);
   cursor: pointer;
   transition: all 0.1s;
 }
 
-[data-theme="dark"] .duration-bar-btn {
-  background: #212836;
-  border-color: #333d4f;
-  color: #eaeff5;
+.duration-bar-btn:hover {
+  background: var(--bg-hover);
 }
 
 .duration-bar-btn.active {
-  background: #2563eb;
-  border-color: #2563eb;
+  background: var(--ink-primary);
+  border-color: var(--ink-primary);
   color: #ffffff;
 }
 
 .bar-visual {
-  height: 6px;
-  background: #94a3b8;
-  border-radius: 2px;
+  height: 4px;
+  background: var(--ink-muted);
+  border-radius: 1px;
 }
 .duration-bar-btn.active .bar-visual {
   background: #ffffff;
 }
 
-/* Middle: Palette Workspace */
+/* Middle Palette Workspace */
 .palette-workspace {
-  padding: 12px 18px;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .palette-mode-switch-row {
@@ -246,165 +238,152 @@
 }
 
 .mode-tab-pill {
-  padding: 4px 12px;
-  border-radius: 20px;
-  border: 1px solid #cbd5e1;
-  background: transparent;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-surface);
   font-size: 0.8rem;
-  font-weight: 700;
-  color: #64748b;
+  font-weight: 600;
+  color: var(--ink-secondary);
   cursor: pointer;
 }
 
 .mode-tab-pill.active {
-  background: #2563eb;
-  border-color: #2563eb;
+  background: var(--ink-primary);
+  border-color: var(--ink-primary);
   color: #ffffff;
 }
 
-/* Diatonic Chord / Melody Buttons Strip */
 .diatonic-strip {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .hook-chord-btn {
-  width: 58px;
-  height: 52px;
-  border-radius: 4px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-top-width: 4px;
-  border-top-color: var(--degree-color, #2563eb);
+  width: 54px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-top-width: 3px;
+  border-top-color: var(--degree-color, var(--accent-primary));
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.1s;
-}
-
-[data-theme="dark"] .hook-chord-btn {
-  background: #212836;
-  border-color: #333d4f;
+  transition: transform 0.08s;
 }
 
 .hook-chord-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+  transform: translateY(-1px);
+  background: var(--bg-subtle);
 }
 
 .hook-chord-btn .numeral {
-  font-size: 1.1rem;
-  font-weight: 800;
+  font-size: 1rem;
+  font-weight: 700;
   line-height: 1;
 }
 
 .hook-chord-btn .chord-name {
-  font-size: 0.7rem;
-  color: #64748b;
+  font-size: 0.68rem;
+  color: var(--ink-muted);
   font-weight: 600;
 }
 
-/* Magic Palette Strip (as seen in frame_58s.jpg) */
+/* Magic Palette Recommendations Strip */
 .magic-palette-container {
-  background: #1f2733;
-  border-radius: 6px;
-  padding: 8px 12px;
-  color: #ffffff;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
 }
 
 .magic-palette-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 0.75rem;
-  font-weight: 800;
+  gap: 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
+  color: var(--ink-muted);
+  margin-bottom: 6px;
 }
 
 .magic-tab-active {
-  color: #60a5fa;
-  border-bottom: 2px solid #60a5fa;
-  padding-bottom: 2px;
+  color: var(--ink-primary);
 }
 
 .magic-suggestions-scroll {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding-bottom: 2px;
 }
 
 .magic-chip-btn {
-  background: #2a3547;
-  border: 1px solid #3d4c63;
-  border-top-width: 4px;
-  border-top-color: var(--chip-color, #60a5fa);
-  border-radius: 4px;
-  padding: 4px 10px;
-  min-width: 60px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-top-width: 3px;
+  border-top-color: var(--chip-color, var(--accent-primary));
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  min-width: 54px;
   display: flex;
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  color: #ffffff;
-  transition: transform 0.1s;
+  color: var(--ink-primary);
   flex: none;
+  transition: transform 0.08s;
 }
 
 .magic-chip-btn:hover {
-  transform: translateY(-2px);
-  background: #37445a;
+  transform: translateY(-1px);
+  background: var(--bg-hover);
 }
 
 .magic-chip-btn .chip-numeral {
-  font-size: 0.95rem;
-  font-weight: 800;
+  font-size: 0.88rem;
+  font-weight: 700;
 }
 
 .magic-chip-btn .chip-prob {
   font-size: 0.65rem;
-  color: #94a3b8;
+  color: var(--ink-muted);
   font-weight: 600;
 }
 
-/* Right: Chord Properties Inspector */
+/* Right: Inspector */
 .hookpad-properties-inspector {
-  border-left: 1px solid #d0d7e5;
-  padding: 12px 14px;
-  background: #f8fafc;
+  border-left: 1px solid var(--border-subtle);
+  padding: 10px 12px;
+  background: var(--bg-subtle);
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-[data-theme="dark"] .hookpad-properties-inspector {
-  border-color: #30363d;
-  background: #1a202c;
+  gap: 8px;
 }
 
 .inspector-title {
-  font-size: 0.8rem;
-  font-weight: 800;
+  font-size: 0.75rem;
+  font-weight: 700;
   text-transform: uppercase;
-  color: #64748b;
-  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+  color: var(--ink-muted);
 }
 
 .inspector-section {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .inspector-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
 }
 
 .inspector-pills-row {
@@ -414,38 +393,33 @@
 }
 
 .prop-pill {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  padding: 3px 8px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 3px 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ink-primary);
   cursor: pointer;
 }
 
-[data-theme="dark"] .prop-pill {
-  background: #252d3d;
-  border-color: #3b4559;
-  color: #e2e8f0;
+.prop-pill:hover {
+  background: var(--bg-hover);
 }
 
 .prop-pill.active {
-  background: #2563eb;
-  border-color: #2563eb;
+  background: var(--ink-primary);
+  border-color: var(--ink-primary);
   color: #ffffff;
 }
 
-/* 4. Timeline Workspace (Rainbow Scale-Degree Lanes) */
+/* 4. Timeline Workspace */
 .hookpad-timeline-container {
   overflow-x: auto;
   position: relative;
-  background: #ffffff;
+  background: var(--bg-surface);
   user-select: none;
-  min-height: 380px;
-}
-
-[data-theme="dark"] .hookpad-timeline-container {
-  background: #11151c;
+  min-height: 340px;
 }
 
 .hookpad-timeline-inner {
@@ -454,64 +428,49 @@
   min-width: 100%;
 }
 
-/* Measure Ruler */
 .hookpad-measure-ruler {
   display: flex;
-  height: 26px;
-  background: #e2e8f0;
-  border-bottom: 1px solid #cbd5e1;
-  margin-left: 64px;
-}
-
-[data-theme="dark"] .hookpad-measure-ruler {
-  background: #1e2633;
-  border-color: #303a4c;
+  height: 24px;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  margin-left: 56px;
 }
 
 .ruler-measure-cell {
-  width: 176px; /* 16 steps * 11px */
-  border-right: 2px solid #94a3b8;
+  width: 176px;
+  border-right: 1px solid var(--border-strong);
   display: flex;
   align-items: center;
   padding-left: 6px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink-secondary);
 }
 
-[data-theme="dark"] .ruler-measure-cell {
-  color: #94a3b8;
-}
-
-/* Melody Piano Roll with Hooktheory Rainbow Lane Stripes */
+/* Melody Piano Roll with Muted Mineral Lane Stripes */
 .hookpad-melody-roll {
   display: flex;
   position: relative;
-  border-bottom: 2px solid #64748b;
+  border-bottom: 1px solid var(--border-strong);
 }
 
 .hookpad-row-headers {
-  width: 64px;
+  width: 56px;
   flex: none;
-  background: #f8fafc;
-  border-right: 2px solid #cbd5e1;
+  background: var(--bg-subtle);
+  border-right: 1px solid var(--border-strong);
   z-index: 10;
 }
 
-[data-theme="dark"] .hookpad-row-headers {
-  background: #161b22;
-  border-color: #30363d;
-}
-
 .row-header-badge-cell {
-  height: 20px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 6px;
-  font-size: 0.7rem;
-  font-weight: 800;
-  border-bottom: 1px solid rgba(0,0,0,0.06);
+  padding: 0 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .melody-lane-grid {
@@ -522,16 +481,15 @@
 
 .melody-grid-row {
   display: flex;
-  height: 20px;
-  /* Authentic Hooktheory subtle scale-degree background color */
-  background: var(--lane-tint, #ffffff);
+  height: 18px;
+  background: var(--lane-tint, transparent);
 }
 
 .melody-grid-cell {
   width: 22px;
-  height: 20px;
-  border-right: 1px solid rgba(0, 0, 0, 0.05);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  height: 18px;
+  border-right: 1px solid rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   cursor: pointer;
   position: relative;
 }
@@ -542,66 +500,50 @@
 }
 
 .melody-grid-cell.bar-boundary {
-  border-right: 2px solid #64748b;
+  border-right: 1px solid var(--border-strong);
 }
 
 .melody-grid-cell.beat-boundary {
-  border-right: 1px dashed rgba(0,0,0,0.25);
+  border-right: 1px dashed var(--border-subtle);
 }
 
-[data-theme="dark"] .melody-grid-cell.beat-boundary {
-  border-right-color: rgba(255,255,255,0.15);
-}
-
-/* Placed Melody Note */
 .placed-melody-note {
   position: absolute;
   top: 1px;
   bottom: 1px;
   left: 1px;
-  border-radius: 4px;
-  background: var(--note-col, #2563eb);
+  border-radius: 2px;
+  background: var(--note-col, var(--accent-primary));
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
-  font-weight: 800;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  font-size: 0.68rem;
+  font-weight: 700;
   z-index: 20;
   pointer-events: none;
 }
 
-/* 5. Chord Lane (Immediately below Melody) */
+/* 5. Chord Lane */
 .hookpad-chord-lane {
   display: flex;
-  height: 68px;
-  background: #f8fafc;
-  border-bottom: 2px solid #cbd5e1;
-}
-
-[data-theme="dark"] .hookpad-chord-lane {
-  background: #161b22;
-  border-color: #30363d;
+  height: 60px;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .chord-lane-header {
-  width: 64px;
+  width: 56px;
   flex: none;
-  background: #e2e8f0;
-  border-right: 2px solid #cbd5e1;
+  background: var(--bg-subtle);
+  border-right: 1px solid var(--border-strong);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 800;
+  font-size: 0.7rem;
+  font-weight: 700;
   text-transform: uppercase;
-  color: #64748b;
-}
-
-[data-theme="dark"] .chord-lane-header {
-  background: #1e2633;
-  border-color: #30363d;
+  color: var(--ink-secondary);
 }
 
 .chord-blocks-container {
@@ -611,48 +553,42 @@
 
 .hook-chord-block {
   height: 100%;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-top-width: 5px;
-  border-top-color: var(--chord-col, #94a3b8);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-top-width: 3px;
+  border-top-color: var(--chord-col, var(--accent-primary));
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   position: relative;
-  transition: background 0.1s;
-}
-
-[data-theme="dark"] .hook-chord-block {
-  background: #212836;
-  border-color: #333d4f;
+  transition: background 0.08s;
 }
 
 .hook-chord-block:hover {
-  background: #f1f5f9;
+  background: var(--bg-subtle);
 }
 
 .hook-chord-block.selected {
-  outline: 3px solid #2563eb;
-  outline-offset: -2px;
-  background: rgba(37, 99, 235, 0.08);
+  outline: 2px solid var(--ink-primary);
+  outline-offset: -1px;
 }
 
 .hook-chord-block.playing {
-  background: rgba(37, 99, 235, 0.22) !important;
+  background: var(--bg-hover) !important;
 }
 
 .hook-chord-block .block-numeral {
-  font-size: 1.25rem;
-  font-weight: 800;
+  font-size: 1.15rem;
+  font-weight: 700;
   line-height: 1.1;
 }
 
 .hook-chord-block .block-name {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ink-muted);
 }
 
 /* Playhead Indicator */
@@ -661,8 +597,7 @@
   top: 0;
   bottom: 0;
   width: 2px;
-  background: #ff3366;
-  box-shadow: 0 0 6px rgba(255, 51, 102, 0.8);
+  background: var(--ink-primary);
   pointer-events: none;
   z-index: 50;
   display: none;
@@ -672,8 +607,58 @@
   content: '';
   position: absolute;
   top: 0;
-  left: -5px;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 8px solid #ff3366;
+  left: -4px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--ink-primary);
+}
+
+/* Piano Keyboard Display */
+.piano-keyboard-widget {
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-subtle);
+  padding: 10px 16px;
+}
+
+.keyboard-keys-wrapper {
+  display: flex;
+  position: relative;
+  height: 70px;
+  user-select: none;
+}
+
+.white-key {
+  flex: 1;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 0 0 2px 2px;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.white-key.active {
+  background: var(--bg-subtle) !important;
+  color: var(--ink-primary);
+  font-weight: 800;
+}
+
+.black-key {
+  position: absolute;
+  width: 22px;
+  height: 44px;
+  background: var(--ink-primary);
+  border-radius: 0 0 2px 2px;
+  z-index: 2;
+  cursor: pointer;
+}
+
+.black-key.active {
+  background: var(--accent-primary) !important;
 }

@@ -1,4 +1,4 @@
-// js/theory.js - Complete Music Theory Engine for Songsketch (Hooktheory Clone)
+// js/theory.js - Complete Music Theory Engine for Songsketch (Restrained Design Edition)
 
 export const NOTE_NAMES_SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 export const NOTE_NAMES_FLAT  = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
@@ -32,15 +32,15 @@ export const MODES = {
   }
 };
 
-// Hooktheory signature scale-degree colors
+// Refined, desaturated mineral tonal markers (Apple-style restraint)
 export const DEGREE_COLORS = [
-  '#e74c3c', // 1: Red
-  '#e67e22', // 2: Orange
-  '#f1c40f', // 3: Yellow
-  '#2ecc71', // 4: Green
-  '#00bcd4', // 5: Cyan / Teal
-  '#3498db', // 6: Blue
-  '#9b59b6'  // 7: Purple
+  '#c2410c', // 1: Terracotta / Warm Ochre
+  '#d97706', // 2: Muted Amber
+  '#b45309', // 3: Raw Sienna / Brass
+  '#15803d', // 4: Forest Sage
+  '#0f766e', // 5: Slate Teal
+  '#1d4ed8', // 6: Deep Slate Cobalt
+  '#6b21a8'  // 7: Muted Plum
 ];
 
 export const CHORD_QUALITIES = {
@@ -141,17 +141,11 @@ export const CHORD_DEFINITIONS = {
   }
 };
 
-/**
- * Returns the note name given pitch class and preferred flat/sharp notation
- */
 export function getNoteName(pitchClass, preferFlats = false) {
   const pc = ((pitchClass % 12) + 12) % 12;
   return preferFlats ? NOTE_NAMES_FLAT[pc] : NOTE_NAMES_SHARP[pc];
 }
 
-/**
- * Calculates complete chord details given a roman numeral and key/mode
- */
 export function getChordDetails(numeral, keyIndex = 0, mode = 'major', inversion = 0) {
   const dict = CHORD_DEFINITIONS[mode] || CHORD_DEFINITIONS.major;
   const def = dict[numeral] || CHORD_DEFINITIONS.major[numeral] || { offset: 0, quality: '', degree: 1 };
@@ -164,15 +158,12 @@ export function getChordDetails(numeral, keyIndex = 0, mode = 'major', inversion
   const rootName = getNoteName(rootPc, isFlatKey);
   const chordName = rootName + qual.symbol;
   
-  // Calculate notes
   const notes = intervals.map(iv => (rootPc + iv) % 12);
   
-  // Handle inversion (0 = Root, 1 = 1st inv (6), 2 = 2nd inv (6/4), 3 = 3rd inv (4/2))
   const invIndex = Math.min(inversion, notes.length - 1);
   const bassPc = notes[invIndex];
   const bassName = getNoteName(bassPc, isFlatKey);
   
-  // Inversion label for Roman numeral (Hooktheory notation)
   let invSymbol = '';
   if (inversion === 1) invSymbol = def.quality.includes('7') ? '6/5' : '6';
   else if (inversion === 2) invSymbol = def.quality.includes('7') ? '4/3' : '6/4';
@@ -200,25 +191,16 @@ export function getChordDetails(numeral, keyIndex = 0, mode = 'major', inversion
   };
 }
 
-/**
- * Gets voiced MIDI note numbers for audio playback of a chord.
- * High-quality voicing: bass in octave 2/3 (MIDI 36-50), treble in octave 4 (MIDI 60-72).
- */
 export function getChordVoicing(chordDetails, baseOctave = 4) {
-  // Bass note down in octave 2/3
   const bassMidi = 36 + chordDetails.bassPc;
-  
-  // Voicing: Treble chord notes centered in octave 4 (MIDI 60-72)
   const rootMidi = 60 + chordDetails.rootPc;
-  const trebleNotes = chordDetails.intervals.map((iv, idx) => {
+  const trebleNotes = chordDetails.intervals.map((iv) => {
     let note = rootMidi + iv;
-    // Keep voicing within a pleasant piano octave range (55 to 76)
     while (note > 76) note -= 12;
     while (note < 55) note += 12;
     return note;
   });
 
-  // Sort treble ascending for clean voicing
   trebleNotes.sort((a, b) => a - b);
 
   return {
@@ -228,18 +210,12 @@ export function getChordVoicing(chordDetails, baseOctave = 4) {
   };
 }
 
-/**
- * Maps a grid row index (0..14) to a MIDI pitch and scale degree info.
- * Row 0 is Degree 1 (Tonic) in lower octave (C4 / MIDI 60).
- * Rows ascend stepwise through the scale degrees.
- */
 export function rowToPitch(row, keyIndex = 0, mode = 'major') {
   const modeData = MODES[mode] || MODES.major;
   const scale = modeData.intervals;
   const degreeIndex = ((row % 7) + 7) % 7;
   const octaveOffset = Math.floor(row / 7);
   
-  // Base MIDI 60 (Middle C) + key transposition + scale interval + octave
   const baseMidi = 60 + keyIndex;
   const midi = baseMidi + scale[degreeIndex] + (octaveOffset * 12) - (keyIndex > 6 ? 12 : 0);
   const pc = ((midi % 12) + 12) % 12;
@@ -257,9 +233,6 @@ export function rowToPitch(row, keyIndex = 0, mode = 'major') {
   };
 }
 
-/**
- * Generate standard Multi-Track MIDI File (Type 1)
- */
 export function generateMidiFile(song) {
   const PPQ = 480;
   const ticksPer16th = PPQ / 4;
@@ -267,7 +240,6 @@ export function generateMidiFile(song) {
 
   const tracks = [];
 
-  // Track 0: Meta
   const metaTrack = [
     0x00, 0xFF, 0x51, 0x03, (mpq >> 16) & 0xFF, (mpq >> 8) & 0xFF, mpq & 0xFF,
     0x00, 0xFF, 0x58, 0x04, 0x04, 0x02, 0x18, 0x08,
@@ -291,19 +263,17 @@ export function generateMidiFile(song) {
     return bytes;
   }
 
-  // Track 1: Chords
   const chordEvents = [];
-  song.chords.forEach((chordData, i) => {
+  let chordStartStep = 0;
+  song.chords.forEach((chordData) => {
     if (!chordData) return;
     const numeral = typeof chordData === 'string' ? chordData : chordData.numeral;
     const inv = chordData.inversion || 0;
     const details = getChordDetails(numeral, song.key, song.mode, inv);
     const voicing = getChordVoicing(details, 4);
     
-    const startStep = chordData.startStep !== undefined ? chordData.startStep : (i * 4);
-    const durSteps = chordData.duration || 4;
-
-    const startTick = startStep * ticksPer16th;
+    const durSteps = (chordData.duration || 4) * 4;
+    const startTick = chordStartStep * ticksPer16th;
     const duration = durSteps * ticksPer16th - 10;
     const endTick = startTick + duration;
 
@@ -311,38 +281,37 @@ export function generateMidiFile(song) {
       chordEvents.push({ tick: startTick, type: 0x90, note: pitch, velocity: 80 });
       chordEvents.push({ tick: endTick,   type: 0x80, note: pitch, velocity: 0 });
     });
+    chordStartStep += durSteps;
   });
 
-  // Track 2: Melody
   const melodyEvents = [];
   song.melody.forEach(note => {
     const pitch = rowToPitch(note.row, song.key, song.mode).midi;
     const startTick = note.step * ticksPer16th;
-    const duration = (note.duration || 1) * ticksPer16th - 6;
+    const duration = (note.duration || 4) * ticksPer16th - 6;
     const endTick = startTick + duration;
 
     melodyEvents.push({ tick: startTick, type: 0x91, note: pitch, velocity: 95 });
     melodyEvents.push({ tick: endTick,   type: 0x81, note: pitch, velocity: 0 });
   });
 
-  // Track 3: Bass
   const bassEvents = [];
-  song.chords.forEach((chordData, i) => {
+  let bassStartStep = 0;
+  song.chords.forEach((chordData) => {
     if (!chordData) return;
     const numeral = typeof chordData === 'string' ? chordData : chordData.numeral;
     const inv = chordData.inversion || 0;
     const details = getChordDetails(numeral, song.key, song.mode, inv);
     const bassPitch = 36 + details.bassPc;
     
-    const startStep = chordData.startStep !== undefined ? chordData.startStep : (i * 4);
-    const durSteps = chordData.duration || 4;
-
-    const startTick = startStep * ticksPer16th;
+    const durSteps = (chordData.duration || 4) * 4;
+    const startTick = bassStartStep * ticksPer16th;
     const duration = durSteps * ticksPer16th - 12;
     const endTick = startTick + duration;
 
     bassEvents.push({ tick: startTick, type: 0x92, note: bassPitch, velocity: 88 });
     bassEvents.push({ tick: endTick,   type: 0x82, note: bassPitch, velocity: 0 });
+    bassStartStep += durSteps;
   });
 
   [chordEvents, melodyEvents, bassEvents].forEach(evList => {
